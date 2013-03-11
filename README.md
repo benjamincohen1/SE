@@ -4,3 +4,4 @@ Members
   
     Ben Cohen
     Thomas Farrell
+    Ian Frasch
