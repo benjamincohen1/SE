@@ -5,3 +5,4 @@ Members
     Ben Cohen
     Thomas Farrell
     Ian Frasch
+    Jack Lawrence
