@@ -11,7 +11,7 @@ public class main{
 		if(args[0].equals("Customer")){
 			int choice=-1;
 			Scanner sc = new Scanner(System.in);
-			while(choice!=1000){
+			while(choice!=1000){  //temporarily use 1000 to quit the machine
 				v.printSelf();
 				System.out.println("Choices: 1) New Item 2) Remove Item 3) Finish 4) Cancel");
 				choice=sc.nextInt();
@@ -64,6 +64,8 @@ public class main{
 						s=new Sale();
 						break;
 					case 4:
+						//Should add the items from the sale back into the machine
+						s=new Sale();
 						break;
 					default:
 						System.out.println("Invalid choice");
