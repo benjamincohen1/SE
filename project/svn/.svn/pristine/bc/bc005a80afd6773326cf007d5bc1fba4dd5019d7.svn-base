@@ -1,0 +1,14 @@
+/**
+    @author Jack Lawrence
+*/
+
+import java.util.*;
+
+/** The manager command line interface. */
+public class ManagerCLI {
+
+    public static void main(String args[]) {
+        
+    }
+	
+}

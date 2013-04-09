@@ -1,0 +1,103 @@
+/**
+    @author Jack Lawrence
+*/
+
+import java.util.*;
+
+/** The restocker command line interface. */
+public class RestockerCLI {
+
+	private static VendingMachine currentMachine = null;
+	private static final int kLevelWelcome = 0;
+    private static final int kMenuLevelMain = 1;
+    private static final int kMenuLevelRestock = 2;
+    
+    private static String welcomeMenuDescription() {
+        return "-------------------------------------------------------------------\n" + 
+               "Restocker CLI\n\n" +
+        	   "Welcome, replacable restocking maggot, to your dead-end job.\n"+
+               "Type help at any time to print the following menu options:\n" +
+        	   "Enter the ID number of the vending machine you wish to restock.\n"+
+               "Enter quit to end the program, you replaceable tool.\n"+
+               "-------------------------------------------------------------------";
+    }
+    private static String mainMenuDescription() {
+        return "-------------------------------------------------------------------\n" + 
+               "Manager CLI - Main Menu\n\n" + 
+               "Type help at any time to print the following menu options:\n" + 
+               "stock                     display inventory of current machine\n" +
+               "begin                     begin the restock process\n" +   
+               "back                      return to machine selection screen \n" + 
+               "-------------------------------------------------------------------";
+    }
+    private static String menuDescriptionForLevel(int level) {
+        switch (level) {
+            default:
+                return mainMenuDescription();
+        }
+    }
+    private static int handleCommandAtLevel(String command, int level) {
+        switch (level) {
+            case kLevelWelcome:
+                return handleCommandAtWelcome(command);
+            case kMenuLevelMain:
+            	return handleCommandAtLevelMain(command);
+            default:
+                return kMenuLevelMain;
+        }
+    }
+    
+    private static int handleCommandAtWelcome(String command) {
+		System.out.println("This is where we would check the number given, and open the right flat file.\n"+
+    "For the sake of testing, we're just moving you to the next level. Good job, maggot.");
+		return kMenuLevelMain;
+	}
+    
+    private static int handleCommandAtLevelMain(String command) {
+    	int level = kMenuLevelRestock;
+        
+        if (command.equals("stock")) {
+            int currentSlot = 1;
+            for (int row = 0; row < currentMachine.height(); row++) {
+                for (int column = 0; column < currentMachine.width(); column++) {   	
+                    Slot currSlot = currentMachine.slotAtCoordinates(row, column);
+                    if (currSlot == null){ //check to see if this slot is null (meaning no slot object has been initialized)
+                    	System.out.print(currentSlot + "Empty\n");
+                    	currentSlot++;
+                    }
+                    else
+                    	System.out.print(currentSlot + ": " + currSlot.getName() + " " + currSlot.quantity());
+                    	currentSlot++;
+                }
+                System.out.println("");
+            }
+        }
+        else if (command.equals("begin")) {
+        	System.out.println("Command not implemented yet.\n");
+        }
+        else if (command.equals("back")) {
+            level = kLevelWelcome;
+        }
+        else{
+        	System.out.println("Invalid Command\n");
+        }
+        
+        return level;
+	}
+
+	public static void main(String args[]) {
+        String userCommand = "";
+        Scanner commandScanner = new Scanner(System.in);
+        
+        int menuLevel = kLevelWelcome;
+        while (!(menuLevel == kLevelWelcome && userCommand.equals("quit"))) {
+            System.out.println(menuDescriptionForLevel(menuLevel));
+            System.out.print("RestockerCLI> ");
+            userCommand = commandScanner.nextLine().toLowerCase(); // Lowercase to normalize input.
+            menuLevel = handleCommandAtLevel(userCommand, menuLevel);
+        }
+        System.out.println("You're fired.");
+        commandScanner.close();
+    }
+	
+}

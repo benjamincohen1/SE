@@ -1,0 +1,288 @@
+/**
+    @author Thomas Farrell
+*/
+
+import java.io.*;
+import java.util.*;
+
+/** The restocker command line interface. */
+public class RestockerCLI extends CommandLineInterface {
+
+	private static VendingMachine currentMachine = null;
+	private static String VendID = "";
+	private static final int kLevelExit = -999999999;
+	private static final int kLevelWelcome = 0;
+    private static final int kMenuLevelMain = 1;
+    private static final int kMenuLevelRestock = 2;
+    
+    //Welcome Menu string.
+    private static String welcomeMenuDescription() {
+        return "-------------------------------------------------------------------\n" + 
+               "Restocker CLI: Welcome\n\n" +
+               "Type help at any time to print the following menu options:\n" +
+        	   "Enter the ID number of the vending machine you wish to restock.\n"+
+               "quit                      terminate the restocker.\n"+
+               "-------------------------------------------------------------------";
+    }
+    
+    //Main Menu String
+    private static String mainMenuDescription() {
+        return "-------------------------------------------------------------------\n" + 
+               "Restocker CLI - Main Menu\n\n" + 
+               "Type help at any time to print the following menu options:\n" + 
+               "stock                     display inventory of current machine\n" +
+               "begin                     begin the restock process\n" +   
+               "return                    return to machine selection screen \n" + 
+               "-------------------------------------------------------------------";
+    }
+    
+    //Restocker Menu String
+    private static String RestockMenuDescription(){
+        return "-------------------------------------------------------------------\n" + 
+                "Restocker CLI - Restocker Menu\n\n" + 
+                "Type help at any time to print the following menu options:\n" + 
+                "display                   display inventory of current machine\n" +
+                "requests                  Show the Requests list\n" + 
+                "recall                    Remove all recalled items from the machine\n" +
+                "add                       Add an item to the machine\n"+
+                "expired                   Removes expired items from the machine\n"+
+                "remove                    Removes all items from a single slot choice\n"+
+                "finish                    Final Notes & Complete the Job\n" + 
+                "-------------------------------------------------------------------";
+    }
+    // Displays the correct Menu String depending on the given Level.
+    private static String menuDescriptionForLevel(int level) {
+        switch (level) {
+        case kLevelWelcome:
+        	return welcomeMenuDescription();
+        case kMenuLevelMain:
+        	return mainMenuDescription();
+        case kMenuLevelRestock:
+        	return RestockMenuDescription();
+        default:
+            return mainMenuDescription();
+        }
+    }
+    // Handles the Command given, depending on the current level.
+    private static int handleCommandAtLevel(String command, int level) {
+        switch (level) {
+            case kLevelWelcome:
+                return handleCommandAtWelcome(command);
+            case kMenuLevelMain:
+            	return handleCommandAtLevelMain(command);
+            case kMenuLevelRestock:
+            	return handleCommandAtLevelRestock(command);
+            default:
+                return kMenuLevelMain;
+        }
+    }
+
+	// Handles the command given at the Welcome Menu.
+    // This should take in a ID number, and open the corresponding flat file of the vending machine.
+    private static int handleCommandAtWelcome(String command) {
+    	if(command.equals("quit")){
+    		return kLevelExit;
+    	}
+    	else if(command.equals("help")){
+    		return kLevelWelcome;
+    	}
+    	// append .txt to end of file, see if file exists
+    	VendID = command;
+    	String MetafileName = command + "Metadata.txt";
+    	String DatafileName = command + "Data.txt";
+    	File VendFile = new File(MetafileName);
+    	File DataFile = new File(DatafileName);
+    	try {
+    	   currentMachine = new VendingMachine(VendFile);
+    	}
+    	catch (Exception ex) {
+    	   System.err.println("Vending machine not found.");
+    	   return kLevelWelcome;
+    	}
+    	
+		return kMenuLevelMain;
+	}
+    
+    private static int handleCommandAtLevelMain(String command) {
+    	int level = kMenuLevelMain;
+        
+        if (command.equals("stock")) {
+            displayMachineStock();
+        }
+        else if (command.equals("begin")) {
+        	System.out.println("Beginning Restock of " + VendID + "\n");
+        	displayManagerNotes();	
+        	level = kMenuLevelRestock;
+        }
+        else if (command.equals("return")) {
+        	System.out.println("Returning to Welcome Menu.\n");
+            level = kLevelWelcome;
+        }
+        else if (command.equals("help")){
+        	level = kMenuLevelMain;
+        }
+        else{
+        	System.out.println("Invalid Command\n");
+        }
+        
+        return level;
+	}
+        
+    @SuppressWarnings("deprecation")
+	private static int handleCommandAtLevelRestock(String command) {
+    	if(command.equals("help")){
+    		return kMenuLevelRestock;
+    	}
+    	else if(command.equals("display")){
+    		displayMachineStock();
+    		return kMenuLevelRestock;
+    	}
+    	else if(command.equals("requests")){
+    		displayManagerNotes();
+    	}
+    	else if(command.equals("add")){
+    		int row = scanPositiveInteger("Row: ");
+    		int col = scanPositiveInteger("Column: ");
+    		int quant = scanPositiveInteger("Quantity: ");
+    		if (row > currentMachine.width() || col > currentMachine.height()){
+        		System.out.println("Invalid slot coordinates.");
+        	}
+    		else if (currentMachine.slotAtCoordinates(row,col).quantity()+quant > currentMachine.depth()){
+    			System.out.println("Too many items in this slot.");
+    		}
+        	else{
+        		ArrayList<Date> newDates = new ArrayList<Date>();
+        		for(int i = 0; i < quant; i++){
+        			System.out.println("Product " + currentMachine.slotAtCoordinates(row, col).getName() +" #" + (i+1));
+            		System.out.print("Year of Expiration?: ");
+            		int year = scanPositiveInteger("Expiration year: ");
+            		int month = scanPositiveInteger("Expiration month: ");
+            		int day = scanPositiveInteger("Expiration day: ");
+            		newDates.add(new Date(year, month, day));
+        		}
+        		currentMachine.addItemsToSlot(row, col, newDates);
+        	}
+    	}
+    	else if(command.equals("recall")){
+    		checkAndRemoveRecalls();
+    	}
+    	else if(command.equals("remove")){
+    		int row = scanPositiveInteger("Row: ");
+    		int col = scanPositiveInteger("Column: ");
+        	if (row > currentMachine.width()|| col > currentMachine.height()){
+        		System.out.println("Invalid slot coordinates.");
+        	}
+        	else{
+        		currentMachine.removeAllItemsFromSlot(row, col);
+        	}
+    	}
+    	else if(command.equals("expired")){
+    		int row = scanPositiveInteger("Row: ");
+    		int col = scanPositiveInteger("Column: ");
+    	    removeExpiredFromSlot(row,col);
+    	}
+    	else if(command.equals("finish")){
+    		System.out.println("Respond to Manager. Type -end to end the note.\n");
+	        System.out.print("RestockerCLI> ");
+	        try {
+    			File f = new File(VendID+"RestockerNotes.txt");
+    			FileWriter wr = new FileWriter(f);
+    			PrintWriter out = new PrintWriter(wr);
+    	        Scanner commandScanner1 = new Scanner(System.in);
+    	        String userCommand = commandScanner1.nextLine();
+    	        while (!userCommand.equals("-end")){
+    	        	out.println(userCommand);
+    		        System.out.print("RestockerCLI> ");
+    		        userCommand = commandScanner1.nextLine();
+    	        }
+    	        out.close();
+    	        currentMachine.updateFlatfile();
+    	    }
+    	    catch (Exception ex) {
+    	       System.err.println("Failed: " + ex.getMessage());
+    	    }
+	        return kMenuLevelMain;
+    	}
+    	return kMenuLevelRestock;
+    }
+    
+    private static void displayMachineStock(){
+    	int currentSlot = 1;
+        for (int row = 0; row < currentMachine.height(); row++) {
+            for (int column = 0; column < currentMachine.width(); column++) {   	
+                Slot currSlot = currentMachine.slotAtCoordinates(row, column);
+                if (currSlot == null){ //check to see if this slot is null (meaning no slot object has been initialized)
+                	System.out.print(currentSlot +": Location ("+ row + "," + column + ") : Empty Slot, No Product\n");
+                	currentSlot++;
+                }
+                else{
+                	System.out.print(currentSlot + ": Location ("+ row + "," + column + ") : " + currSlot.getName() + ", " + currSlot.quantity()+" Units\n");
+                	currentSlot++;
+                }
+            }
+            System.out.println("");
+        }
+    }
+    
+    private static void displayManagerNotes() {
+        try {
+        	System.out.println("Manager's Notes:");
+        	
+        	FileReader w = new FileReader(VendID+"ManagerNotes.txt");
+        	BufferedReader br = new BufferedReader(w);
+        	String line;
+        	while((line = br.readLine()) != null){
+        		System.out.println(line);
+        	}
+        	br.close();
+        }
+        catch (IOException ex) {
+            System.err.println("No notes found.");
+        }
+    }
+    
+    private static void checkAndRemoveRecalls(){
+    	for(int x = 0; x < currentMachine.width(); x++){
+    		for (int y = 0; y < currentMachine.height(); y++){
+    			boolean recallStatus = currentMachine.slotAtCoordinates(x, y).metadata().isRecalled();
+    			if(recallStatus){
+    				currentMachine.removeAllItemsFromSlot(x, y);
+    				currentMachine.updateMetadataForSlot(x, y, null);
+    			}
+    		}
+    	}
+    }
+    
+    private static void removeExpiredFromSlot(int x, int y){
+    	if (x > currentMachine.width()  || x < 0 || y < 0 ||  y > currentMachine.height()){
+    		System.err.println("Invalid slot coordinates.");
+    		return;
+    	}
+    	Slot replaceSlot = currentMachine.slotAtCoordinates(x, y);
+    	ArrayList<Date> slotData = currentMachine.slotAtCoordinates(x, y).getExpDates();
+    	for (int i = 0; i < slotData.size(); i++){
+    		Date itemDate = slotData.get(i);
+    		if(itemDate.before(currentMachine.date())){
+    			currentMachine.dispenseItem(x, y, 1);
+    		}
+    	}
+    }
+	public static void main(String args[]) {
+		
+        String userCommand = "";
+        Scanner commandScanner = new Scanner(System.in);
+        
+        int menuLevel = kLevelWelcome;
+        while (!(menuLevel == kLevelWelcome && userCommand.equals("quit"))) {
+            System.out.println(menuDescriptionForLevel(menuLevel));
+            System.out.print("RestockerCLI> ");
+            userCommand = commandScanner.nextLine(); // Lowercase to normalize input.
+            menuLevel = handleCommandAtLevel(userCommand, menuLevel);
+            if (menuLevel == kLevelExit){
+            	break;
+            }
+        }
+        commandScanner.close();
+    }
+	
+}

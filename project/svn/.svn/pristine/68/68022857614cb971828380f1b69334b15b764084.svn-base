@@ -1,0 +1,49 @@
+/**
+    @author Jack Lawrence
+*/
+import java.util.*;
+/** 
+    Performs item queueing and dequeueing operations.
+
+    Takes into consideration the expiration dates of the items of a specific item type that it holds.
+*/
+public class Slot {
+
+    /** @name Instance Variables */
+    
+    /** The metadata describing the item type. */
+    private ItemMetadata _metadata;
+    /** A queue of expiration dates where the front-most item is the next item to be dispensed by the vending machine. */
+    private ArrayList<Date> _expirationDates;
+    
+    /** @name Accessors & Mutators */
+    
+    public ItemMetadata metadata() {
+        return _metadata;
+    }
+    
+    /** Setter function setItemMetadata: Changes the ItemMetadata with a given ItemMetaData **/
+    public void setItemMetadata(ItemMetaData newData){
+    	this._metadata = newData;
+    }
+    
+    /** Setter function setExpirationDate: Changes the current list of Expiration Dates with a given set. **/
+    public void setExpirationDate(ArrayList<Date> newExpirationDates){
+    	this._expirationDates = newExpirationDates;
+    }
+    
+    /** @name Derived Properties */
+    
+    /** The number of items available in the slot. */
+    public int quantity() {
+        return _expirationDates.size();
+    }
+    
+    /** @name Constructors */
+    
+    public Slot(ItemMetadata metadata, ArrayList<Date> expirationDates) {
+        _metadata = metadata;
+        _expirationDates = expirationDates;
+    }
+	
+}

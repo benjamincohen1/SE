@@ -23,8 +23,8 @@ public class Item{
 		return this.expDate;  //Implement this
 	}
 	public double getPrice(){
-		return this.price; 
-	}
+		return this.price;
+ 	}
 	public String getName(){
 		return this.name;
 	}

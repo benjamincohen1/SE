@@ -1,0 +1,21 @@
+import junit.framework.TestCase;
+
+public class VendingMachineTest extends TestCase {
+
+	public VendingMachineTest(String name) {
+		super(name);
+	}
+
+	// Create an Empty Vending Machine, 3 columns by 3 rows.
+	public void testEmptyMachine(){
+		VendingMachine testMachine = new VendingMachine(3,3,5);
+		assertEquals("TestMachine's height should be 3.", testMachine.height(), 3);
+		assertTrue("TestMachine's width should be 3.",testMachine.width() == 3);
+		assertTrue("TestMachine's depth should be 5.",testMachine.depth() == 5);
+		for (int x = 0; x < testMachine.width(); x++){
+			for (int y =0; y< testMachine.height(); y++){
+				assertTrue("All slots in Test Machine should be 0 quantity.",testMachine.slotAtCoordinates(x,y) == null);
+			}
+		}
+	}
+}

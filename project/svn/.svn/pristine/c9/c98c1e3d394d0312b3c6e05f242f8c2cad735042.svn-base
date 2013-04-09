@@ -1,0 +1,272 @@
+/**
+    @author Jack Lawrence
+*/
+
+import java.util.*;
+
+/** The customer command line interface. */
+public class CustomerCLI {
+
+    /** Encapsulates a row and a column. */
+    private class CoordinatePair {
+        public int row;
+        public int column;
+        
+        public CoordinatePair(int aRow, int aColumn) {
+            row = aRow;
+            column = aColumn;
+        }
+    }
+
+    /** @name Instance Variables */
+    
+    /** The vending machine */
+    private VendingMachine _vendingMachine;
+    /** 
+        The transaction list. Keys are CoordinatePair objects and values are Integer objects. 
+        The CoordinatePair corresponds to the coordinates of the Slot and the Integer
+        corresponds to the quantity of items to be dispensed from the Slot.
+        
+        Using a LinkedHashMap makes it easy to combine multiple requests for
+        the same item into one datapoint. LinkedHashMap objects preserve insertion order. 
+    */
+    private LinkedHashMap<CoordinatePair, Integer> _currTransaction;
+    
+    /** @name Accessors & Mutators */
+    
+    public VendingMachine vendingMachine() {
+        return _vendingMachine;
+    }
+    
+    public CustomerCLI(VendingMachine vendingMachine) {
+        _vendingMachine = vendingMachine;
+    }
+    
+    /**
+        Print a formatted grid of the items in the vending machine.
+    */
+    public void display() {
+        if (_currTransaction == null) {
+            beginTransaction();
+        }
+        for (int row = 0; row < vendingMachine().height(); row++) {
+            for (int column = 0; column < vendingMachine().width(); column++) {
+                Slot currSlot = vendingMachine().slotAtCoordinates(row, column);
+                System.out.print(String.format("[%s: %.2f (%d)]", currSlot.metadata().name(), currSlot.metadata().price()/100.0, currSlot.quantity()));
+            }
+            System.out.println("");
+        }
+    }
+    
+    /**
+        Begin a transaction.
+    */
+    public void beginTransaction() {
+        _currTransaction = new LinkedHashMap<CoordinatePair, Integer>();
+    }
+    
+    /**
+        Cancel a transaction. Begins a new transaction afterwards.
+    */
+    public void cancelTransaction() {
+        beginTransaction();
+    }
+    
+    /**
+        Finish paying for a transaction.
+        
+        Creates an array of LineItem objects using the data in _currTransaction
+        and then adds the LineItem objects to a new Sale object with the current 
+        date. Archives the sale to disk.
+        
+        Clears the transaction after it's finished and begins a new one.
+    */
+    public void finishPayment() {
+        if (_currTransaction != null) {
+            ArrayList<LineItem> lineItems = new ArrayList<LineItem>();
+            for (Map.Entry<CoordinatePair, Integer> entry : _currTransaction.entrySet()) {
+                CoordinatePair pair = entry.getKey();
+                Integer quantity = entry.getValue();
+                if (quantity > 0) {
+                    vendingMachine().dispenseItem(pair.row, pair.column, quantity);
+                    Slot slot = vendingMachine().slotAtCoordinates(pair.row, pair.column);
+                    LineItem lineItem = new LineItem(slot.metadata(), quantity);
+                    lineItems.add(lineItem);
+                }
+            }
+            Date currentDate = new Date();
+            Sale sale = new Sale(currentDate, lineItems);
+            // TODO: archive sale to disk.
+            
+            _currTransaction = null;
+        }
+        beginTransaction();
+    }
+    
+    /**
+        List all of the items currently in the user's cart (the current transaction).
+    */
+    public void listItemsInCart() {
+        if (_currTransaction != null && _currTransaction.size() != 0) {
+            double total = 0.0;
+            int index = 0;
+            for (Map.Entry<CoordinatePair, Integer> entry : _currTransaction.entrySet()) {
+                CoordinatePair pair = entry.getKey();
+                Integer quantity = entry.getValue();
+                if (quantity > 0) {
+                    index++;
+                    Slot slot = vendingMachine().slotAtCoordinates(pair.row, pair.column);
+                    total += (slot.metadata().price()*quantity)/100.0;
+                    System.out.println(String.format("%d. %s %.2f (%d): %.2f", index, slot.metadata().name(), slot.metadata().price()/100.0, quantity, (slot.metadata().price()*quantity)/100.0));
+                }
+            }
+            System.out.println("-------------------------------------------------------------------");
+            System.out.println(String.format("Total: %.2f", total));
+        }
+        else {
+            System.out.println("Cart is empty.");
+        }
+    }
+    
+    /**
+        Add an item to the user's cart (the current transaction).
+        
+        @param number The number of the slot in the vending machine.
+        @param quantity The quantity of the item to add to the user's cart.
+        
+        @throw IllegalArgumentException if the number for the slot is out of 
+        bounds or the quantity is unavailable.
+    */
+    public void addItemToCart(int number, int quantity) throws IllegalArgumentException {
+        if (_currTransaction == null) {
+            beginTransaction();
+        }
+        if (number > vendingMachine().height()*vendingMachine().width() - 1) {
+             // out of bounds
+             throw new IllegalArgumentException(String.format("Item slot %d is out of bounds.", number));
+        }
+        CoordinatePair pair = new CoordinatePair((int)number/vendingMachine().height(), number%vendingMachine().width());
+        if (vendingMachine().canDispenseItem(pair.row, pair.column, quantity)) {
+            vendingMachine().dispenseItem(pair.row, pair.column, quantity);
+            Integer oldQuantity = _currTransaction.get(pair); // Get existing quantity from the transaction, if any.
+            Integer finalQuantity = quantity + oldQuantity;
+            _currTransaction.put(pair, finalQuantity);
+        }
+        else {
+            throw new IllegalArgumentException(String.format("Slot at %d does not have %d unexpired items to vend.", number, quantity));
+        }
+    }
+    
+    /**
+        Remove an item from the user's cart (the current transaction) and put it back in the machine.
+        
+        @param pair The Coordinate pair of the Slot in the vending machine.
+        
+        @throw IllegalArgumentException if the pair does not exist in the cart.
+    */
+    public void removeItemFromCartWithCoordinates(CoordinatePair pair) throws IllegalArgumentException {
+        _currTransaction.put(pair, 0);
+    }
+    
+    public String menuDescription() {
+        return "-------------------------------------------------------------------\n" + 
+               "Customer Vending Machine CLI\n\n" + 
+               "Type help at any time to print the following menu options:\n" + 
+               "display                   display the items in the vending machine\n" +  
+               "cancel                    cancel a transaction\n" + 
+               "pay                       purchase the items in your cart\n" + 
+               "cart                      list the items in your cart\n" + 
+               "add [number] [quantity]   add a quantity of an item in a slot to your cart\n" + 
+               "remove [number]           remove the numbered line item from your cart\n" + 
+               "help                      print this menu again\n" + 
+               "quit                      close the application\n" + 
+               "-------------------------------------------------------------------";
+    }
+    
+    public void quit() {
+        cancelTransaction();
+    }
+    
+    public static void main(String args[]) {
+        VendingMachine vendingMachine = new VendingMachine(5, 8, 10); // test vending machine. Replace with actual logic.
+        CustomerCLI cli = new CustomerCLI(vendingMachine);
+    
+        String userCommand = "";
+        Scanner commandScanner = new Scanner(System.in);
+        while (!userCommand.equalsIgnoreCase("quit")) {
+            System.out.println(cli.menuDescription());
+            System.out.print("CustomerCLI> ");
+            userCommand = commandScanner.nextLine().toLowerCase(); // Lowercase to normalize input.
+        
+            if (userCommand.equals("display")) {
+                cli.display();
+            }
+            else if (userCommand.equals("begin")) {
+                cli.beginTransaction();
+            }
+            else if (userCommand.equals("cancel")) {
+                cli.cancelTransaction();
+            }
+            else if (userCommand.equals("pay")) {
+                cli.finishPayment();
+            }
+            else if (userCommand.equals("cart")) {
+                cli.listItemsInCart();
+            }
+            else if (userCommand.startsWith("add")) {
+                try { // Put all the things in a try block so we can catch command parsing errors.
+                    String[] addArgs = userCommand.split("\\s+"); // split on whitespace. Ex: "add 5 7" => ["add", "5", "7"].
+                    if (addArgs.length != 3) {
+                        System.err.println("Error: add requires two positive integer arguments.");
+                    }
+                    else if (Integer.parseInt(addArgs[1]) < 1 || Integer.parseInt(addArgs[2]) < 1) {
+                        System.err.println("Error: add requires two positive integer arguments.");
+                    }
+                    else {
+                        cli.addItemToCart(Integer.parseInt(addArgs[1])-1, Integer.parseInt(addArgs[2])); // -1 to convert to 0-based index.
+                    }
+                }
+                catch (NumberFormatException numberException) {
+                    System.err.println("Error: add requires two positive integer arguments.");
+                }
+            }
+            else if (userCommand.startsWith("remove")) {
+                try { // Put all the things in a try block so we can catch command parsing errors.
+                    String[] removeArgs = userCommand.split("\\s+"); // split on whitespace. Ex: "remove 9" => ["remove", "9"].
+                    if (removeArgs.length != 2) {
+                        System.err.println("Error: remove requires one positive integer argument.");
+                    }
+                    else if (Integer.parseInt(removeArgs[1]) < 1) {
+                        System.err.println("Error: remove requires one positive integer argument.");
+                    }
+                    else {
+                        if (cli._currTransaction == null) {
+                            cli.beginTransaction();
+                        }
+                        int zeroBasedIndex = Integer.parseInt(removeArgs[1])-1;
+                        if ((zeroBasedIndex+1) > cli._currTransaction.size()) {
+                            System.err.println("Error: index out of bounds.");
+                        }
+                        else {
+                            CoordinatePair chosenCoordinatePair = (CoordinatePair)cli._currTransaction.entrySet().toArray()[zeroBasedIndex];
+                            cli.removeItemFromCartWithCoordinates(chosenCoordinatePair);
+                        }
+                    }
+                }
+                catch (NumberFormatException numberException) {
+                    System.err.println("Error: remove requires one positive integer argument.");
+                }
+            }
+            else if (!userCommand.equalsIgnoreCase("help") && !userCommand.equalsIgnoreCase("quit")) {
+                // If the command isn't any of the ones in the menu, print an error and continue.
+                // We don't need to specifically handle help and quit since help gets printed every
+                // time through the loop and quit is handled in the while statement.
+                System.err.println("Command not recognized.");
+            }
+        }  
+        
+        commandScanner.close(); 
+        
+        cli.quit();
+    }
+}

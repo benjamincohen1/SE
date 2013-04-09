@@ -1,0 +1,147 @@
+/**
+    @author Thomas Farrell
+*/
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.*;
+
+/** The restocker command line interface. */
+public class RestockerCLI extends CommandLineInterface {
+
+	private static VendingMachine currentMachine = null;
+	private static String VendID = "";
+	private static final int kLevelExit = -999999999;
+	private static final int kLevelWelcome = 0;
+    private static final int kMenuLevelMain = 1;
+    private static final int kMenuLevelRestock = 2;
+    
+    //Welcome Menu string.
+    private static String welcomeMenuDescription() {
+        return "-------------------------------------------------------------------\n" + 
+               "Restocker CLI: Welcome\n\n" +
+               "Type help at any time to print the following menu options:\n" +
+        	   "Enter the ID number of the vending machine you wish to restock.\n"+
+               "quit                      terminate the restocker.\n"+
+               "-------------------------------------------------------------------";
+    }
+    
+    //Main Menu String
+    private static String mainMenuDescription() {
+        return "-------------------------------------------------------------------\n" + 
+               "Restocker CLI - Main Menu\n\n" + 
+               "Type help at any time to print the following menu options:\n" + 
+               "stock                     display inventory of current machine\n" +
+               "begin                     begin the restock process\n" +   
+               "return                    return to machine selection screen \n" + 
+               "-------------------------------------------------------------------";
+    }
+    // Displays the correct Menu String depending on the given Level.
+    private static String menuDescriptionForLevel(int level) {
+        switch (level) {
+        case kLevelWelcome:
+        	return welcomeMenuDescription();
+        case kMenuLevelMain:
+        	return mainMenuDescription();
+        default:
+            return mainMenuDescription();
+        }
+    }
+    // Handles the Command given, depending on the current level.
+    private static int handleCommandAtLevel(String command, int level) {
+        switch (level) {
+            case kLevelWelcome:
+                return handleCommandAtWelcome(command);
+            case kMenuLevelMain:
+            	return handleCommandAtLevelMain(command);
+            default:
+                return kMenuLevelMain;
+        }
+    }
+    
+    // Handles the command given at the Welcome Menu.
+    // This should take in a ID number, and open the corresponding flat file of the vending machine.
+    private static int handleCommandAtWelcome(String command) {
+    	if(command.equals("quit")){
+    		return kLevelExit;
+    	}
+    	else if(command.equals("help")){
+    		return kLevelWelcome;
+    	}
+    	// append .txt to end of file, see if file exists
+    	VendID = command;
+    	String MetafileName = command + "Metadata.txt";
+    	String DatafileName = command + "Data.txt";
+    	File VendFile = new File(MetafileName);
+    	File DataFile = new File(DatafileName);
+    	try {
+			currentMachine = new VendingMachine(VendFile);
+			currentMachine.populateFromFile(DataFile);
+		} catch (FileNotFoundException e) {
+			System.out.println("Vending Machine not found.");
+			return kLevelWelcome;
+		} catch (IOException e) {
+			System.out.println("Vending Machine not found.");
+			return kLevelWelcome;
+		}
+		System.out.println("Vending Machine found. Moving to Main Menu.");
+		return kMenuLevelMain;
+	}
+    
+    private static int handleCommandAtLevelMain(String command) {
+    	int level = kMenuLevelMain;
+        
+        if (command.equals("stock")) {
+            int currentSlot = 1;
+            for (int row = 0; row < currentMachine.height(); row++) {
+                for (int column = 0; column < currentMachine.width(); column++) {   	
+                    Slot currSlot = currentMachine.slotAtCoordinates(row, column);
+                    if (currSlot == null){ //check to see if this slot is null (meaning no slot object has been initialized)
+                    	System.out.print(currentSlot + ": Empty Slot, No Product\n");
+                    	currentSlot++;
+                    }
+                    else{
+                    	System.out.print(currentSlot + ": " + currSlot.getName() + ", " + currSlot.quantity()+" Units\n");
+                    	currentSlot++;
+                    }
+                }
+                System.out.println("");
+            }
+        }
+        else if (command.equals("begin")) {
+        	System.out.println("Command not implemented yet.\n");
+        }
+        else if (command.equals("return")) {
+        	System.out.println("Returning to Welcome Menu.\n");
+            level = kLevelWelcome;
+        }
+        else if (command.equals("help")){
+        	level = kMenuLevelMain;
+        }
+        else{
+        	System.out.println("Invalid Command\n");
+        }
+        
+        return level;
+	}
+    
+	public static void main(String args[]) {
+		
+        String userCommand = "";
+        Scanner commandScanner = new Scanner(System.in);
+        
+        int menuLevel = kLevelWelcome;
+        while (!(menuLevel == kLevelWelcome && userCommand.equals("quit"))) {
+            System.out.println(menuDescriptionForLevel(menuLevel));
+            System.out.print("RestockerCLI> ");
+            userCommand = commandScanner.nextLine(); // Lowercase to normalize input.
+            menuLevel = handleCommandAtLevel(userCommand, menuLevel);
+            if (menuLevel == kLevelExit){
+            	break;
+            }
+        }
+        commandScanner.close();
+    }
+	
+}

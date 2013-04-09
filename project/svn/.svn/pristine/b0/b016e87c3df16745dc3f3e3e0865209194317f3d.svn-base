@@ -1,0 +1,379 @@
+/**
+    @author Jack Lawrence
+*/
+
+import java.util.*;
+
+/** The manager command line interface. */
+public class ManagerCLI extends CommandLineInterface {
+
+    private static final int kMenuLevelMain = 0;
+    private static final int kMenuLevelMachine = 1;
+    private static final int kMenuLevelItems = 2;
+    private static final int kMenuLevelRestock = 3;
+
+    /** All of the vending machines in the system. */
+    private static ArrayList<VendingMachine> _vendingMachines = new ArrayList<VendingMachine>();
+    /** The currently selected vending machine. */
+    private static VendingMachine _currentVendingMachine;
+    
+    private static ArrayList<VendingMachine> vendingMachines() {
+        return _vendingMachines;
+    }
+    
+    private static VendingMachine currentVendingMachine() {
+        return _currentVendingMachine;
+    }
+    
+    private static void setCurrentVendingMachine(VendingMachine currentVendingMachine) {
+        _currentVendingMachine = currentVendingMachine;
+    }
+    
+    /**
+        Lists every vending machine in the system.
+    */
+    private static void listVendingMachines() {
+        int index = 0;
+        for (VendingMachine vendingMachine : vendingMachines()) {
+            index++;
+            System.out.println(String.format("%d: %s", index, vendingMachine.name()));
+        }
+    }
+    
+    /**
+        Selects the vending machine to view data on and restock.
+    */
+    private static boolean selectVendingMachine(int machineIdx) {
+        if (machineIdx < vendingMachines().size()) {
+            setCurrentVendingMachine(vendingMachines().get(machineIdx));
+            return true;
+        }
+        else {
+            System.err.println("Machine number out of bounds.");
+            return false;
+        }
+    }
+    
+    /**
+        Remove a vending machine from the system.
+        
+        @param machineIdx The index of the vending machine to remove.
+    */
+    private static void removeVendingMachine(int machineIdx) {
+        vendingMachines().remove(machineIdx);
+    }
+    
+    /**
+        Adds a new vending machine to the system. Walks the user
+        through creation.
+    */
+    private static void addNewVendingMachine() {
+        // name
+        System.out.print("Name: ");
+        String name = inputScanner().nextLine();
+        
+        // rows
+        int rows = scanPositiveInteger("Rows: ");
+        
+        // columns
+        int columns = scanPositiveInteger("Columns: ");
+        
+        // slot depth
+        int depth = scanPositiveInteger("Slot Depth: ");
+        
+        VendingMachine newMachine = new VendingMachine(rows, columns, depth, name);
+        vendingMachines().add(newMachine);
+    }
+    
+    /**
+        Lists all sales across vending machines.
+    */
+    private static void listSales() {
+        
+    }
+    
+    /**
+        Lists sales for the current vending machine.
+    */
+    private static void listSalesForCurrentMachine() {
+    
+    }
+    
+    /**
+        Lists all unique items available for restocking.
+    */
+    private static void listItems() {
+    
+    }
+    
+    /**
+        Adds an item type to the list of unique items.
+    */
+    private static void addItem() {
+    
+    }
+    
+    /**
+        Remove an item at the specified index from the
+        list of unique items.
+        
+        @param itemIdx The index of the item to remove.
+    */
+    private static void removeItem(int itemIdx) {
+    
+    }
+    
+    /**
+        Recall all items at the specified index from
+        the list of unique items.
+    */
+    private static void recallItem(int itemIdx) {
+    
+    }
+    
+    /**
+        Begins a batch of restocking commands for the
+        currently selected vending machine.
+    */
+    private static void beginRestock() {
+    
+    }
+    
+    /**
+        Lists the current restocking instructions for the
+        currently selected vending machine.
+    */
+    private static void listRestockCommands() {
+    
+    }
+    
+    /**
+        Confirms a batch of restocking commands.
+    */
+    private static void confirmRestock() {
+    
+    }
+    
+    /**
+        Cancels the current batch of restocking commands
+        for the currently selected vending machine.
+    */
+    private static void cancelRestock() {
+    
+    }
+    
+    /**
+        Walks through restocking an item in the current
+        vending machine.
+    */
+    private static void restockItem() {
+    
+    }
+    
+    /**
+        Walks through removing an item in the current
+        vending machine.
+    */
+    private static void removeItemFromMachine() {
+    
+    }
+    
+    private static String menuDescriptionForLevel(int level) {
+        switch (level) {
+            case kMenuLevelMachine:
+                return machineMenuDescription();
+            case kMenuLevelItems:
+                return itemMenuDescription();
+            case kMenuLevelRestock:
+                return restockMenuDescription();
+            case kMenuLevelMain:
+            default:
+                return mainMenuDescription();
+
+            
+        }
+    }
+    
+    private static String mainMenuDescription() {
+        return "-------------------------------------------------------------------\n" + 
+               "Manager CLI - Main Menu\n\n" + 
+               "Type help at any time to print the following menu options:\n" + 
+               "machines                  display a list of vending machines in the system\n" +
+               "add                       add a vending machine to the system\n" +   
+               "remove [index]            remove the specified machine from the system \n" + 
+               "select [index]            select the machine to command\n" + 
+               "sales                     display a list of sales across every vending machine\n" + 
+               "items                     enter the item management interface.\n" +
+               "help                      print this menu again\n" + 
+               "quit                      close the application\n" + 
+               "-------------------------------------------------------------------";
+    }
+    
+    private static String machineMenuDescription() {
+        return "-------------------------------------------------------------------\n" + 
+               "Manager CLI - Vending Machine " + currentVendingMachine().name() + " Menu\n\n" + 
+               "Type help at any time to print the following menu options:\n" + 
+               "sales                     display a list of sales for the currently selected vending machine.\n" + 
+               "restock                   enter the restocking interface for the currently selected vending machine.\n" + 
+               "help                      print this menu again\n" + 
+               "back                      return to the main menu\n" + 
+               "-------------------------------------------------------------------";
+
+    }
+    
+    private static String itemMenuDescription() {
+        return "-------------------------------------------------------------------\n" + 
+               "Manager CLI - Item Menu\n\n" + 
+               "Type help at any time to print the following menu options:\n" + 
+               "display                   display a list of unique items in the system\n" +
+               "add                       add an item to the system\n" +   
+               "remove [index]            remove the specified item from the system\n" + 
+               "recall [index]            recall an item\n" + 
+               "help                      print this menu again\n" + 
+               "back                      return to the main menu\n" + 
+               "-------------------------------------------------------------------";
+    }
+    
+    private static String restockMenuDescription() {
+        return "-------------------------------------------------------------------\n" + 
+               "Manager CLI - Restock " + currentVendingMachine().name() + " Menu\n\n" + 
+               "Type help at any time to print the following menu options:\n" + 
+               "list                      list the current batch of restocking instructions\n" +
+               "add                       add an item to the machine\n" +
+               "remove                    remove an item from the machine\n" +   
+               "confirm                   send the batch of restocking instructions to the restocker\n" +
+               "cancel                    cancel and return to the machine menu\n" + 
+               "help                      print this menu again\n" + 
+               "-------------------------------------------------------------------";
+    }
+    
+    private static int handleCommandAtLevel(String command, int level) {
+        switch (level) {
+            case kMenuLevelMain:
+                return handleCommandAtMainLevel(command);
+            case kMenuLevelMachine:
+                return handleCommandAtMachineLevel(command);
+            case kMenuLevelItems:
+                return handleCommandAtItemLevel(command);
+            case kMenuLevelRestock:
+                return handleCommandAtRestockLevel(command);
+            default:
+                return kMenuLevelMain;
+        }
+    }
+    
+    private static int handleCommandAtMainLevel(String command) {
+        int level = kMenuLevelMain;
+        
+        if (command.equals("machines")) {
+            listVendingMachines();
+        }
+        else if (command.equals("add")) {
+            addNewVendingMachine();
+        }
+        else if (command.startsWith("remove")) {
+            ArrayList<Integer> parsedArgs = positiveIntegerArgumentsOnCommand(command, 1);
+            if (parsedArgs != null) {
+                removeVendingMachine(parsedArgs.get(0)-1); // FIXME probably shouldn't do the index shift here.
+            }
+        }
+        else if (command.startsWith("select")) {
+            ArrayList<Integer> parsedArgs = positiveIntegerArgumentsOnCommand(command, 1);
+            if (parsedArgs != null) {
+                if (selectVendingMachine(parsedArgs.get(0)-1)) // FIXME probably shouldn't do the index shift here.
+                {
+                    level = kMenuLevelMachine;
+                }
+            }
+        }
+        else if (command.equals("sales")) {
+            listSales();
+        }
+        else if (command.equals("items")) {
+            level = kMenuLevelItems;
+        }
+        
+        return level;
+    }
+    
+    private static int handleCommandAtMachineLevel(String command) {
+        int level = kMenuLevelMachine;
+        
+        if (command.equals("sales")) {
+            listSalesForCurrentMachine();
+        }
+        else if (command.equals("restock")) {
+            level = kMenuLevelRestock;   
+        }
+        else if (command.equals("back")) {
+            level = kMenuLevelMain;
+        }
+        
+        return level;
+    }
+    
+    private static int handleCommandAtItemLevel(String command) {
+        int level = kMenuLevelItems;
+        
+        if (command.equals("display")) {
+            listItems();
+        }
+        else if (command.equals("add")) {
+            addItem();
+        }
+        else if (command.startsWith("remove")) {
+            ArrayList<Integer> parsedArgs = positiveIntegerArgumentsOnCommand(command, 1);
+            if (parsedArgs != null) {
+                removeItem(parsedArgs.get(0)-1); // FIXME probably shouldn't do the index shift here.
+            }
+        }
+        else if (command.startsWith("recall")) {
+            ArrayList<Integer> parsedArgs = positiveIntegerArgumentsOnCommand(command, 1);
+            if (parsedArgs != null) {
+                recallItem(parsedArgs.get(0)-1); // FIXME probably shouldn't do the index shift here.
+            }
+        }
+        else if (command.equals("back")) {
+            level = kMenuLevelMain;
+        }
+        
+        return level;
+    }
+    
+    private static int handleCommandAtRestockLevel(String command) {
+        int level = kMenuLevelRestock;
+        
+        if (command.equals("list")) {
+            listRestockCommands();
+        }
+        else if (command.equals("add")) {
+            restockItem();
+        }
+        else if (command.equals("remove")) {
+            removeItemFromMachine();
+        }
+        else if (command.equals("confirm")) {
+            confirmRestock();
+            level = kMenuLevelMachine;
+        }
+        else if (command.equals("cancel")) {
+            cancelRestock();
+            level = kMenuLevelMachine;
+        }
+        
+        return level;
+    }
+    
+    public static void main(String args[]) {        
+        String userCommand = "";
+        
+        int menuLevel = kMenuLevelMain;
+        while (!(menuLevel == kMenuLevelMain && userCommand.equals("quit"))) {
+            System.out.println(menuDescriptionForLevel(menuLevel));
+            System.out.print("ManagerCLI> ");
+            userCommand = inputScanner().nextLine().toLowerCase(); // Lowercase to normalize input.
+            menuLevel = handleCommandAtLevel(userCommand, menuLevel);
+        }
+    }
+	
+}

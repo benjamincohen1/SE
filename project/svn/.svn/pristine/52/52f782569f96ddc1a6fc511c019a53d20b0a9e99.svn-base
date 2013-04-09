@@ -1,0 +1,148 @@
+import java.util.*;
+
+/**
+ * 
+ * @author Ian Frasch (ijf1860@rit.edu)
+ */
+public class VendingMachine {
+
+	/** Keeps track of time using a Date object*/
+	private Date time;
+	/** Represents the vending machine layout of slots. (row, col) format. */
+	private ArrayList<ArrayList<Slot>> slots;
+	/** The number of rows in the vending machine. */
+	private int _rows;
+	/** The number of columns in the vending machine. */
+	private int _columns;
+	/** The depth of a slot in the vending machine. */
+	private int _depth;
+	
+	//Getter Functions
+	public int width() {
+		return _columns;
+	}
+	
+	public int height() {
+	   return _rows;
+	}
+	
+	public int depth() {
+	   return _depth;
+	}
+	
+	/**Constructor
+	 * @param	rows	number of rows
+	 * 			cols	number of columns
+	 * 			depth	maximum number of items
+	 * 					that can fit in a slot
+	 * */
+	public VendingMachine(int rows, int cols, int depth){ 
+		slots = new ArrayList<ArrayList<Slot>>();
+		_rows = rows;
+		_columns = cols;
+		_depth = depth;
+		//Initialize each slot with null until an actual slot with item metadata gets
+		//instantiated and put there. This way the size of the vending machine gets fixed.
+		for (int row = 0; row < rows; row++){
+			ArrayList<Slot> rowOfSlots = new ArrayList<Slot>(); //create a row
+			for (int col = 0; col < cols; col++){				
+				rowOfSlots.add(null);							//fill with null
+			}
+			slots.add(rowOfSlots);								//add row to the 2D array
+		}
+		time = new Date(); //Initialize the simulated time with the actual current time 
+						  //(measured to the nearest millisecond)
+		
+		//TODO: Initilialize vending machine flat file
+	}
+	
+	/**
+	   Retrieve (but do not remove or mutate) a copy of the slot at the provided coordinates.
+	   
+	   Returns a copy of the slot to ensure that the vending machine's state is not unknowingly 
+	   modified by the caller.
+	   
+	   @param row The row of the slot to retrieve.
+	   @param column The column of the slot to retrieve.
+	   
+	   @return A copy of the slot at the provided coordinates.
+	*/
+	public Slot slotAtCoordinates(int row, int column) {
+		return new Slot(slots.get(row).get(column));
+	}
+	
+	/** Determine whether or not the specified quantity of an item at the specified coordinates
+	 *  can be dispensed.
+	 * @param   row 		row of slot to dispense from
+	 * 			column		column of slot to dispense from
+	 * 			quantity	number of items to dispense from slot
+	 * @return Whether or not the quantity of items can be dispensed.
+	 */
+	public boolean canDispenseItem(int row, int column, int quantity) {
+	   return true; // TODO: Implement.
+	}
+	
+	/** Dispense(remove) an item from the machine, update flat file.
+	 * @param   row 		row of slot to dispense from
+	 * 			column		column of slot to dispense from
+	 * 			quantity	number of items to dispense from slot
+	 * */
+	public void dispenseItem(int row, int column, int quantity) {
+		for (int i = 0; i < quantity; i++){
+			slots.get(row).get(column).popItem(); // pop an Item from the specified slot
+		}
+		//TO DO: modify contents the flat file to reflect change (how will this file be set up?)
+	}
+	
+	/** Update the metadata for a slot in the machine.
+	 * @param   row 		row of slot to update
+	 * 			column 		column of slot to update
+	 * 			metadata	metadata to use
+	 * */
+	public void updateMetadataForSlot(int row, int column, ItemMetadata metadata){
+		
+	}
+	
+	/** Add Items to the back of a slot in the machine.
+	 * @param   row 		row of slot to add Items to
+	 * 			column 		column of slot to add Items to
+	 * 			expirationDates 	array of Date objects
+	 * */
+	public void addItemsToSlot(int row, int column, ArrayList<Date> expirationDates){
+		//Something either here or in the Slot class should check to make sure the slot is not full
+		for (Date expirationDate : expirationDates){
+			slots.get(row).get(column).addItem(expirationDate);
+		}
+	}
+	
+	/** Remove all items from a slot
+	 * @param   row 		row of slot to be removed
+	 * 			column 		column of slot to be removed
+	 * */
+	public void removeAllItemsFromSlot(int row, int column){
+		
+	}
+	
+	/** Swap two slots
+	 * @param   row1 		row of first slot
+	 * 			column1 	column of first slot
+	 * 			row2 		row of second slot
+	 * 			column2 	column of second slot
+	 * */
+	public void swapSlots(int row1, int column1, int row2, int column2){
+		Slot firstSlot = slots.get(row1).get(column1);
+		Slot secondSlot = slots.get(row2).get(column2);
+		
+		slots.get(row1).set(column1, secondSlot);
+		slots.get(row2).set(column2, firstSlot);
+	}
+	
+	
+	// These need to be implemented, we don't know what they are yet
+	public void GetAnalytics() {
+	}
+	
+	public void GenerateSalesReport() {
+		
+	}
+}

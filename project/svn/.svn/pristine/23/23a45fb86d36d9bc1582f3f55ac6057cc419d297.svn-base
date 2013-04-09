@@ -1,0 +1,17 @@
+import random
+def main():
+	name = raw_input("Enter a name of a test machine: ")
+	f = open(name+"Metadata.txt", 'w+')
+	w=random.randint(5,10)
+	h=random.randint(5,10)
+	d=random.randint(5,10)
+
+	f.write(name+" "+str(w)+" "+str(h)+" "+str(d)+" "+name+"Data.txt")
+
+	items = ["Cheese","Chips","Pretzels","Tacos","Gum",'Chocolate']
+	f = open(name+"Data.txt", 'w+')
+	for x in range(w):
+		for y in range(h):
+			f.write(str(x)+" "+str(y)+" "+random.choice(items)+" "+str(random.randint(0,4))+str(random.randint(0,9))+str(random.randint(0,9))+" "+str(random.randint(1,31))+"/"+str(random.randint(1,12))+"/"+str(random.randint(1990,2014))+" "+str(random.randint(1,d))+"\n")
+
+main()

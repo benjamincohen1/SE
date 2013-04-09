@@ -1,0 +1,32 @@
+/**
+    @author Jack Lawrence
+*/
+import java.util.*;
+/** Holds information about an item type. */
+public class ItemMetadata {
+    
+    /** @name Instance Variables */
+    
+    /** The name of the item */
+    private String _name;
+    /** The item's price in cents */
+    private int _price;
+    
+    /** @name Accessors & Mutators */
+    
+    public String name() {
+        return _name;
+    }
+    
+    public int price() {
+        return _price;
+    }
+    
+    /** @name Constructors */
+    
+    public ItemMetadata(String name, int price) {
+        _name = name;
+        _price = price;
+    }
+	
+}

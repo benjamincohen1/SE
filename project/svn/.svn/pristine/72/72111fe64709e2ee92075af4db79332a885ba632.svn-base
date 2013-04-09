@@ -1,0 +1,57 @@
+/**
+    @author Jack Lawrence
+*/
+
+import java.util.*;
+
+/** The restocker command line interface. */
+public class RestockerCLI {
+
+	private static final int kLevelWelcome = 0;
+    private static final int kMenuLevelMain = 1;
+    
+    private static String mainMenuDescription() {
+        return "-------------------------------------------------------------------\n" + 
+               "Restocker CLI\n" +
+        	   "Welcome, replacable restocking maggot, to your dead-end job.\n"+
+               "Type help at any time to print the following menu options:\n" +
+        	   "Enter the ID number of the vending machine you wish to restock.\n"+
+               "Enter quit to end the program, you replaceable tool.\n"+
+               "-------------------------------------------------------------------";
+    }
+    private static String menuDescriptionForLevel(int level) {
+        switch (level) {
+            default:
+                return mainMenuDescription();
+        }
+    }
+    private static int handleCommandAtLevel(String command, int level) {
+        switch (level) {
+            case kLevelWelcome:
+                return handleCommandAtWelcome(command);
+            default:
+                return kMenuLevelMain;
+        }
+    }
+    
+    private static int handleCommandAtWelcome(String command) {
+		System.out.println("This is where we would check the number given, and open the right flat file.\n");
+		return 0;
+	}
+
+	public static void main(String args[]) {
+        String userCommand = "";
+        Scanner commandScanner = new Scanner(System.in);
+        
+        int menuLevel = kLevelWelcome;
+        while (!(menuLevel == kLevelWelcome && userCommand.equals("quit"))) {
+            System.out.println(menuDescriptionForLevel(menuLevel));
+            System.out.print("RestockerCLI> ");
+            userCommand = commandScanner.nextLine().toLowerCase(); // Lowercase to normalize input.
+            menuLevel = handleCommandAtLevel(userCommand, menuLevel);
+        }
+        System.out.println("You're fired.");
+        commandScanner.close();
+    }
+	
+}
