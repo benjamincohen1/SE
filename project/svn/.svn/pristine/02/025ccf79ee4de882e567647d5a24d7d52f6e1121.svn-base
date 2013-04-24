@@ -1,0 +1,89 @@
+/**
+    @author Jack Lawrence
+*/
+
+import java.util.*;
+import java.io.*;
+
+/** Exposes manager-facing actions that interface with the object model. */
+public class ManagerActionBridge {
+
+    /** All of the vending machines in the system. */
+    private ArrayList<VendingMachine> _vendingMachines;
+    /** The currently selected vending machine. */
+    private VendingMachine _currentVendingMachine;
+    
+    public ArrayList<VendingMachine> vendingMachines() {
+        if (_vendingMachines == null) {
+            _vendingMachines = new ArrayList<VendingMachine>();
+            //Get machines from directory
+            String path = ".";
+            File folder = new File(path);
+            File[] listOfFiles=folder.listFiles();
+            ArrayList<File> MetadataFiles= new ArrayList<File>();
+            for (int i = 0;i<listOfFiles.length;i++){
+                if(listOfFiles[i].isFile()){
+                    if(listOfFiles[i].getName().matches(".*Meta.*txt")){
+                       MetadataFiles.add(listOfFiles[i]);
+                    }
+                }
+            }
+            for (File x : MetadataFiles){
+                try {
+                    VendingMachine vm = new VendingMachine(x);
+                    _vendingMachines.add(vm);
+                }
+                catch (Exception ex) {
+                    System.err.println("Couldn't create vending machine: " + ex.getMessage());
+                }
+            }
+        }
+        return _vendingMachines;
+    }
+    
+    public VendingMachine currentVendingMachine() {
+        return _currentVendingMachine;
+    }
+    
+    public void setCurrentVendingMachine(VendingMachine currentVendingMachine) {
+        _currentVendingMachine = currentVendingMachine;
+    }
+    
+    /** @name Constructors */
+
+    public ManagerActionBridge() {
+			
+    }
+    
+    /** @name Actions */
+    
+    /**
+        Selects the vending machine to view data on and restock.
+    */
+    public boolean selectVendingMachine(int machineIdx){
+        if (machineIdx < vendingMachines().size()) {
+            setCurrentVendingMachine(vendingMachines().get(machineIdx));
+            return true;
+        }
+        else {
+            System.err.println("Machine number out of bounds.");
+            return false;
+        }
+    }
+    
+    public void addVendingMachine(VendingMachine machine) {
+        vendingMachines().add(machine);
+    }
+    
+    /**
+        Remove a vending machine from the system.
+        
+        @param machineIdx The index of the vending machine to remove.
+    */
+    public void removeVendingMachine(int machineIdx) {
+        vendingMachines().remove(machineIdx);
+    }
+    
+    
+	
+}

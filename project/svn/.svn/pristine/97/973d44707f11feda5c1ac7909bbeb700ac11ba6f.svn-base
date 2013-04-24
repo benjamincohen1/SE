@@ -1,0 +1,111 @@
+import java.awt.EventQueue;
+
+import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import javax.swing.border.LineBorder;
+
+
+/**
+ * 
+ * @author Ian Frasch (ijf1860@rit.edu)
+ */
+public class ManagerGUI {
+
+	private JFrame frmSmartVendingManager;
+
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					ManagerGUI window = new ManagerGUI();
+					window.frmSmartVendingManager.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	/**
+	 * Create the application.
+	 */
+	public ManagerGUI() {
+		initialize();
+	}
+
+	/**
+	 * Initialize the contents of the frame.
+	 */
+	private void initialize() {
+		frmSmartVendingManager = new JFrame();
+		frmSmartVendingManager.setTitle("Smart Vending Manager");
+		frmSmartVendingManager.setBounds(100, 100, 492, 328);
+		frmSmartVendingManager.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		frmSmartVendingManager.getContentPane().add(tabbedPane, BorderLayout.CENTER);
+		
+		JPanel machinesTab = new JPanel();
+		tabbedPane.addTab("Machines", null, machinesTab, "Manage Vending Machines");
+		machinesTab.setLayout(new BorderLayout(0, 0));
+		String[] test = {"PoopMachine", "ButtsMachine", "Chalupa Machine"};
+		
+		JPanel machinesList = new JPanel();
+		machinesTab.add(machinesList, BorderLayout.WEST);
+		machinesList.setLayout(new BorderLayout(0, 0));
+		
+		
+		JList list = new JList();
+		list.setBorder(new LineBorder(new Color(0, 0, 0)));
+		list.setListData(test);
+		JScrollPane scrollPane = new JScrollPane(list);
+		machinesList.add(scrollPane, BorderLayout.WEST);
+		
+		JLabel lblMachinesList = new JLabel("Machines List:");
+		scrollPane.setColumnHeaderView(lblMachinesList);
+		
+		JPanel panel = new JPanel();
+		machinesList.add(panel, BorderLayout.EAST);
+		GridBagLayout gbl_panel = new GridBagLayout();
+		gbl_panel.columnWidths = new int[]{139, 0};
+		gbl_panel.rowHeights = new int[]{32, 0, 32, 0};
+		gbl_panel.columnWeights = new double[]{0.0, Double.MIN_VALUE};
+		gbl_panel.rowWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		panel.setLayout(gbl_panel);
+		
+		JButton btnNewMachine = new JButton("+ New Machine");
+		GridBagConstraints gbc_btnNewMachine = new GridBagConstraints();
+		gbc_btnNewMachine.insets = new Insets(0, 0, 5, 0);
+		gbc_btnNewMachine.gridx = 0;
+		gbc_btnNewMachine.gridy = 0;
+		panel.add(btnNewMachine, gbc_btnNewMachine);
+		
+		JButton btnRemoveMachine = new JButton("Remove Selected");
+		GridBagConstraints gbc_btnRemoveMachine = new GridBagConstraints();
+		gbc_btnRemoveMachine.insets = new Insets(0, 0, 5, 0);
+		gbc_btnRemoveMachine.gridx = 0;
+		gbc_btnRemoveMachine.gridy = 1;
+		panel.add(btnRemoveMachine, gbc_btnRemoveMachine);
+		
+		JLabel lblDisplayMachineInfo = new JLabel("DISPLAY MACHINE INFO HERE");
+		machinesTab.add(lblDisplayMachineInfo, BorderLayout.EAST);
+		
+		JPanel salesTab = new JPanel();
+		tabbedPane.addTab("Sales", null, salesTab, "View sales and analytics");
+		
+		JPanel itemsTab = new JPanel();
+		tabbedPane.addTab("Items", null, itemsTab, "Manage Items");
+		
+		JPanel restockTab = new JPanel();
+		tabbedPane.addTab("Request Restock", null, restockTab, "Send a request to a restocker");
+	}
+
+}

@@ -1,0 +1,226 @@
+import java.awt.EventQueue;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+/**
+ * 
+ * @author Ian Frasch (ijf1860@rit.edu)
+ */
+public class CustomerGUI {
+
+	private JFrame frmSmartVending;
+	private int total = 3000;	//test value, replace with something real
+	private JTextPane numDisplay;			//Displays the item number that is being typed
+	private String numberStringEntered = "";	//Item number entered in String form
+	private int itemNumberInput;	//Actual item number input the user has entered
+	private String[] testCart = {"Taco: $4.00", "Taco: $10.00", "Taco: $10.00"}; //more test stuff
+	private JLabel lblTotal;
+	private JTextPane textPaneTotal;
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					CustomerGUI window = new CustomerGUI();
+					window.frmSmartVending.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	/**
+	 * Create the application.
+	 */
+	public CustomerGUI() {
+		initialize();
+	}
+
+	/**
+	 * Initialize the contents of the frame.
+	 */
+	private void initialize() {
+		frmSmartVending = new JFrame();
+		frmSmartVending.setTitle("Smart Vending");
+		frmSmartVending.setBounds(100, 100, 450, 300);
+		frmSmartVending.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		ButtonListener listener = new ButtonListener();
+		
+		JPanel panel_1 = new JPanel();
+		frmSmartVending.getContentPane().add(panel_1, BorderLayout.CENTER);
+		panel_1.setLayout(new GridLayout(1, 2, 0, 0));
+		
+		JPanel panel_3 = new JPanel();
+		panel_1.add(panel_3);
+		panel_3.setLayout(new BorderLayout(0, 0));
+		
+		JPanel numpadPanel = new JPanel();
+		panel_3.add(numpadPanel, BorderLayout.CENTER);
+		numpadPanel.setLayout(new GridLayout(0, 3, 0, 0));
+		
+		JButton button1 = new JButton("1");
+		numpadPanel.add(button1);
+		button1.addActionListener(listener);
+		
+		JButton button2 = new JButton("2");
+		numpadPanel.add(button2);
+		button2.addActionListener(listener);
+		
+		JButton button3 = new JButton("3");
+		numpadPanel.add(button3);
+		button3.addActionListener(listener);
+		
+		JButton button4 = new JButton("4");
+		numpadPanel.add(button4);
+		button4.addActionListener(listener);
+		
+		JButton button5 = new JButton("5");
+		numpadPanel.add(button5);
+		button5.addActionListener(listener);
+		
+		JButton button6 = new JButton("6");
+		numpadPanel.add(button6);
+		button6.addActionListener(listener);
+		
+		JButton button7 = new JButton("7");
+		numpadPanel.add(button7);
+		button7.addActionListener(listener);
+		
+		JButton button8 = new JButton("8");
+		numpadPanel.add(button8);
+		button8.addActionListener(listener);
+		
+		JButton button9 = new JButton("9");
+		numpadPanel.add(button9);
+		button9.addActionListener(listener);
+		
+		
+		JPanel panel_10 = new JPanel();
+		panel_3.add(panel_10, BorderLayout.SOUTH);
+		panel_10.setLayout(new BorderLayout(0, 0));
+		
+		JButton btnEnter = new JButton("ENTER");
+		panel_10.add(btnEnter, BorderLayout.CENTER);
+		
+		JPanel panel_4 = new JPanel();
+		FlowLayout flowLayout_1 = (FlowLayout) panel_4.getLayout();
+		flowLayout_1.setHgap(20);
+		flowLayout_1.setVgap(0);
+		panel_4.setBackground(Color.WHITE);
+		panel_10.add(panel_4, BorderLayout.NORTH);
+		
+		numDisplay = new JTextPane();
+		numDisplay.setText(numberStringEntered);
+		panel_4.add(numDisplay);
+		
+		JPanel panel = new JPanel();
+		panel_1.add(panel);
+		panel.setLayout(new BorderLayout(0, 0));
+		
+		JPanel panel_5 = new JPanel();
+		panel.add(panel_5, BorderLayout.NORTH);
+		
+		JLabel lblCart = new JLabel("Cart:");
+		panel_5.add(lblCart);
+		
+		JPanel panel_6 = new JPanel();
+		panel.add(panel_6, BorderLayout.SOUTH);
+		panel_6.setLayout(new GridLayout(2, 1, 0, 0));
+		
+		JButton btnCancel = new JButton("Cancel");
+		panel_6.add(btnCancel);
+		
+		JButton btnPay = new JButton("Pay");
+		btnPay.addActionListener(listener);
+		panel_6.add(btnPay);
+		
+		JPanel panel_8 = new JPanel();
+		panel.add(panel_8, BorderLayout.WEST);
+		
+		JPanel panel_9 = new JPanel();
+		FlowLayout flowLayout = (FlowLayout) panel_9.getLayout();
+		flowLayout.setVgap(0);
+		panel.add(panel_9, BorderLayout.EAST);
+		
+		JButton btnX = new JButton("X");
+		panel_9.add(btnX);
+		
+		JPanel panel_7 = new JPanel();
+		panel.add(panel_7, BorderLayout.CENTER);
+		panel_7.setLayout(new BorderLayout(0, 0));
+		
+		JScrollPane scrollPane = new JScrollPane();
+		panel_7.add(scrollPane);
+		
+		JList list = new JList();
+		list.setListData(testCart);
+		scrollPane.setViewportView(list);
+		
+		JPanel panel_12 = new JPanel();
+		panel_12.setBackground(Color.WHITE);
+		panel_7.add(panel_12, BorderLayout.SOUTH);
+		panel_12.setLayout(new BorderLayout(0, 0));
+		
+		lblTotal = new JLabel("Total:");
+		lblTotal.setBackground(Color.WHITE);
+		panel_12.add(lblTotal, BorderLayout.WEST);
+		
+		textPaneTotal = new JTextPane();
+		textPaneTotal.setEditable(false);
+		textPaneTotal.setText("$"+ total/100.0);
+		panel_12.add(textPaneTotal, BorderLayout.CENTER);
+		
+		JPanel panel_2 = new JPanel();
+		frmSmartVending.getContentPane().add(panel_2, BorderLayout.NORTH);
+		
+		JLabel lblChalupaMachine = new JLabel("Chalupa Machine");
+		panel_2.add(lblChalupaMachine);
+	}
+	
+	/**
+	 *  Private button listener class.
+	 * 
+	 */
+	private class ButtonListener implements ActionListener{
+		public void actionPerformed(ActionEvent e) {
+			updateTotal();
+
+			String buttonString = e.getActionCommand();
+			
+			for (int i = 1; i < 10; i++){
+				if (buttonString.equals(String.valueOf(i))){
+					if (numberStringEntered.length() <= 1){
+						numberStringEntered += i;
+						numDisplay.setText(numberStringEntered);
+					}
+				}
+			}
+			
+			if (buttonString.equals("ENTER")){
+				System.out.println("Here");
+				itemNumberInput = Integer.parseInt(numberStringEntered);
+				numberStringEntered = ""; //Clear the input
+				numDisplay.setText("");
+			}
+			else if (buttonString.equals("Pay")){
+
+			}
+		}
+	}
+	private void updateTotal(){
+		double total = 0.00;
+		for(String item : testCart){
+			String[] newItem=item.split("\\$");
+			total+=Double.parseDouble(newItem[1]);
+		}
+		textPaneTotal.setText("$"+total);
+
+	}
+
+}

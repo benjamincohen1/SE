@@ -1,0 +1,403 @@
+import java.awt.EventQueue;
+
+import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import javax.swing.border.LineBorder;
+import javax.swing.border.EtchedBorder;
+
+
+/**
+ * 
+ * @author Ian Frasch (ijf1860@rit.edu)
+ */
+public class ManagerGUI {
+
+	private JFrame frmSmartVendingManager;
+	private JButton btnNewMachine,submitNewMachine,cancelNewMachine;
+	private ButtonListener listener;
+	private JTextField NameField;
+	private final ButtonGroup buttonGroup = new ButtonGroup();
+	private ManagerActionBridge bridge;
+	private JFrame newMachineFrame; //pop up window that is display when a new machine is created
+	private JFrame viewAllRequestsFrame;
+	private JComboBox MachineSelectorFreeform;
+	private JTextArea NotesFromRestockTextArea;
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					ManagerGUI window = new ManagerGUI();
+					window.frmSmartVendingManager.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	/**
+	 * Create the application.
+	 */
+	public ManagerGUI() {
+		bridge = new ManagerActionBridge();
+		initializeGUI();
+	}
+
+	/**
+	 * Initialize the contents of the frame.
+	 */
+	private void initializeGUI() {
+		listener = new ButtonListener();
+
+		frmSmartVendingManager = new JFrame();
+		frmSmartVendingManager.setTitle("Smart Vending Manager");
+		frmSmartVendingManager.setBounds(100, 100, 535, 349);
+		frmSmartVendingManager.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		frmSmartVendingManager.getContentPane().add(tabbedPane, BorderLayout.CENTER);
+		
+		JPanel machinesTab = new JPanel();
+		tabbedPane.addTab("Machines", null, machinesTab, "Manage Vending Machines");
+		machinesTab.setLayout(new BorderLayout(0, 0));
+		String[] test = {"PoopMachine", "ButtsMachine", "Chalupa Machine"};
+		
+		JPanel machinesList = new JPanel();
+		machinesTab.add(machinesList, BorderLayout.WEST);
+		machinesList.setLayout(new BorderLayout(0, 0));
+		
+		
+		JList list = new JList();
+		list.setBorder(new LineBorder(new Color(0, 0, 0)));
+		list.setListData(test);
+		JScrollPane scrollPane = new JScrollPane(list);
+		machinesList.add(scrollPane, BorderLayout.WEST);
+		
+		JLabel lblMachinesList = new JLabel("Machines List:");
+		scrollPane.setColumnHeaderView(lblMachinesList);
+		
+		JPanel panel = new JPanel();
+		machinesList.add(panel, BorderLayout.EAST);
+		GridBagLayout gbl_panel = new GridBagLayout();
+		gbl_panel.columnWidths = new int[]{139, 0};
+		gbl_panel.rowHeights = new int[]{32, 0, 32, 0};
+		gbl_panel.columnWeights = new double[]{0.0, Double.MIN_VALUE};
+		gbl_panel.rowWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		panel.setLayout(gbl_panel);
+		
+		btnNewMachine = new JButton("+ New Machine");
+		btnNewMachine.addActionListener(listener);
+		GridBagConstraints gbc_btnNewMachine = new GridBagConstraints();
+		gbc_btnNewMachine.insets = new Insets(0, 0, 5, 0);
+		gbc_btnNewMachine.gridx = 0;
+		gbc_btnNewMachine.gridy = 0;
+		panel.add(btnNewMachine, gbc_btnNewMachine);
+		
+		JButton btnRemoveMachine = new JButton("Remove Selected");
+		GridBagConstraints gbc_btnRemoveMachine = new GridBagConstraints();
+		gbc_btnRemoveMachine.insets = new Insets(0, 0, 5, 0);
+		gbc_btnRemoveMachine.gridx = 0;
+		gbc_btnRemoveMachine.gridy = 1;
+		panel.add(btnRemoveMachine, gbc_btnRemoveMachine);
+		
+		JPanel salesTab = new JPanel();
+		tabbedPane.addTab("Sales", null, salesTab, "View sales and analytics");
+		
+		JPanel itemsTab = new JPanel();
+		tabbedPane.addTab("Items", null, itemsTab, "Manage Items");
+		
+		JPanel restockTab = new JPanel();
+		tabbedPane.addTab("Restock", null, restockTab, "Send a request to a restocker");
+		restockTab.setLayout(new GridLayout(0, 3, 5, 0));
+		
+		JPanel CurrentRequestList = new JPanel();
+		restockTab.add(CurrentRequestList);
+		CurrentRequestList.setLayout(new BorderLayout(10, 5));
+		
+		JLabel lblCurrentRequestList = new JLabel("Current Request List:");
+		lblCurrentRequestList.setHorizontalAlignment(SwingConstants.CENTER);
+		CurrentRequestList.add(lblCurrentRequestList, BorderLayout.NORTH);
+		
+		JScrollPane RequestListScrollPane = new JScrollPane();
+		CurrentRequestList.add(RequestListScrollPane, BorderLayout.CENTER);
+		
+		JList list_1 = new JList();
+		list_1.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+		RequestListScrollPane.setViewportView(list_1);
+		
+		JButton ConfirmRequestBtn = new JButton("Submit Request");
+		CurrentRequestList.add(ConfirmRequestBtn, BorderLayout.SOUTH);
+		
+		JPanel middlePane = new JPanel();
+		restockTab.add(middlePane);
+		middlePane.setLayout(new BorderLayout(0, 0));
+		
+		JPanel AddRemovePane = new JPanel();
+		middlePane.add(AddRemovePane);
+		AddRemovePane.setLayout(new GridLayout(2, 1, 0, 30));
+		
+		JButton AddToListButton = new JButton("<<< Add To List");
+		AddRemovePane.add(AddToListButton);
+		
+		JButton RemoveFromListButton = new JButton("Remove From List >>>");
+		AddRemovePane.add(RemoveFromListButton);
+		
+		JPanel statusPane = new JPanel();
+		FlowLayout flowLayout = (FlowLayout) statusPane.getLayout();
+		middlePane.add(statusPane, BorderLayout.NORTH);
+		
+		JButton viewRequestsButton = new JButton("View/Edit All Requests");
+		viewRequestsButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				viewAllRequests();
+			}
+		});
+		statusPane.add(viewRequestsButton);
+		
+		JPanel NewRequestPane = new JPanel();
+		restockTab.add(NewRequestPane);
+		NewRequestPane.setLayout(new BorderLayout(0, 5));
+		
+		JButton btnNewButton = new JButton("Clear All Fields");
+		NewRequestPane.add(btnNewButton, BorderLayout.SOUTH);
+		
+		JPanel MachineNumberGrid = new JPanel();
+		NewRequestPane.add(MachineNumberGrid, BorderLayout.NORTH);
+		MachineNumberGrid.setLayout(new GridLayout(0, 2, 0, 5));
+		
+		JLabel lblMachineRequest = new JLabel("Machine:");
+		MachineNumberGrid.add(lblMachineRequest);
+		
+		JComboBox MachineChoiceRequest = new JComboBox();
+		MachineNumberGrid.add(MachineChoiceRequest);
+		
+		JPanel FillInPane = new JPanel();
+		NewRequestPane.add(FillInPane, BorderLayout.CENTER);
+		FillInPane.setLayout(new GridLayout(5, 1, 0, 15));
+		
+		JPanel RowFillInPane = new JPanel();
+		FillInPane.add(RowFillInPane);
+		RowFillInPane.setLayout(new GridLayout(1, 2, 0, 0));
+		
+		JLabel lblrow = new JLabel("Row:");
+		RowFillInPane.add(lblrow);
+		
+		JSpinner rowspinner = new JSpinner();
+		rowspinner.setModel(new SpinnerNumberModel(new Integer(0), new Integer(0), null, new Integer(1)));
+		RowFillInPane.add(rowspinner);
+		
+		JPanel ColFillInPane = new JPanel();
+		FillInPane.add(ColFillInPane);
+		ColFillInPane.setLayout(new GridLayout(1, 2, 0, 0));
+		
+		JLabel lblcol = new JLabel("Column:");
+		ColFillInPane.add(lblcol);
+		
+		JSpinner colspinner = new JSpinner();
+		colspinner.setModel(new SpinnerNumberModel(new Integer(0), new Integer(0), null, new Integer(1)));
+		ColFillInPane.add(colspinner);
+		
+		JPanel NameFillInPane = new JPanel();
+		FillInPane.add(NameFillInPane);
+		NameFillInPane.setLayout(new GridLayout(0, 2, 0, 0));
+		
+		JLabel lblName = new JLabel("Item Name:");
+		NameFillInPane.add(lblName);
+		
+		NameField = new JTextField();
+		NameFillInPane.add(NameField);
+		NameField.setColumns(16);
+		
+		JPanel QuantityFillInPane = new JPanel();
+		FillInPane.add(QuantityFillInPane);
+		QuantityFillInPane.setLayout(new GridLayout(0, 2, 0, 0));
+		
+		JLabel lblQuantity = new JLabel("Quantity:");
+		QuantityFillInPane.add(lblQuantity);
+		
+		JSpinner quantSpinner = new JSpinner();
+		quantSpinner.setModel(new SpinnerNumberModel(new Integer(0), new Integer(0), null, new Integer(1)));
+		QuantityFillInPane.add(quantSpinner);
+		
+		JPanel ActionFillInPane = new JPanel();
+		FillInPane.add(ActionFillInPane);
+		ActionFillInPane.setLayout(new GridLayout(0, 2, 0, 0));
+		
+		JRadioButton rdbtnRestock = new JRadioButton("Restock");
+		buttonGroup.add(rdbtnRestock);
+		ActionFillInPane.add(rdbtnRestock);
+		
+		JRadioButton rdbtnRemove = new JRadioButton("Remove");
+		buttonGroup.add(rdbtnRemove);
+		ActionFillInPane.add(rdbtnRemove);
+		
+		JPanel notesPane = new JPanel();
+		tabbedPane.addTab("Freeform Notes", null, notesPane, null);
+		notesPane.setLayout(new BorderLayout(0, 0));
+		
+		JPanel NotePaneNorth = new JPanel();
+		notesPane.add(NotePaneNorth, BorderLayout.NORTH);
+		NotePaneNorth.setLayout(new GridLayout(0, 2, 0, 0));
+		
+		JLabel lblSelectAMachine = new JLabel("Select a machine to view/create notes for:");
+		NotePaneNorth.add(lblSelectAMachine);
+		
+		ArrayList<VendingMachine> machinesAL = bridge.vendingMachines();
+		ArrayList<String> names = new ArrayList<String>();
+		int count = 0;
+		for(VendingMachine v : machinesAL){
+			names.add(v.name());
+		}
+		MachineSelectorFreeform = new JComboBox(names.toArray());
+		MachineSelectorFreeform.addActionListener(listener);
+		NotePaneNorth.add(MachineSelectorFreeform);
+		
+		JPanel MainPanelNotes = new JPanel();
+		notesPane.add(MainPanelNotes, BorderLayout.CENTER);
+		MainPanelNotes.setLayout(new GridLayout(2, 0, 0, 10));
+		
+		JPanel NotesToMangerFreeformPane = new JPanel();
+		MainPanelNotes.add(NotesToMangerFreeformPane);
+		NotesToMangerFreeformPane.setLayout(new BorderLayout(0, 0));
+		
+		JLabel lblNotesFromRestocker = new JLabel("Notes From Restocker:");
+		NotesToMangerFreeformPane.add(lblNotesFromRestocker, BorderLayout.NORTH);
+		
+		JScrollPane NotesFromRestockScrollpane = new JScrollPane();
+		NotesToMangerFreeformPane.add(NotesFromRestockScrollpane, BorderLayout.CENTER);
+		
+
+
+		NotesFromRestockTextArea = new JTextArea();
+		NotesFromRestockTextArea.setWrapStyleWord(true);
+		NotesFromRestockTextArea.setLineWrap(true);
+		NotesFromRestockTextArea.setEditable(false);
+		//Sort of Dirty tricks below.  Please don't kill me// - Ben
+		if(bridge.vendingMachines().size()>0){
+			NotesFromRestockTextArea.setText(bridge.getManagerNotesForMachine(bridge.vendingMachines().get(0)));
+		}
+		//End of dirtyness
+		NotesFromRestockScrollpane.setViewportView(NotesFromRestockTextArea);
+		
+		JPanel NotesFromManagerFreeformPane = new JPanel();
+		MainPanelNotes.add(NotesFromManagerFreeformPane);
+		NotesFromManagerFreeformPane.setLayout(new BorderLayout(0, 0));
+		
+		JLabel lblNotesToRestocker = new JLabel("Notes To Restocker:");
+		NotesFromManagerFreeformPane.add(lblNotesToRestocker, BorderLayout.NORTH);
+		
+		JScrollPane NotesToRestockerScrollpane = new JScrollPane();
+		NotesFromManagerFreeformPane.add(NotesToRestockerScrollpane, BorderLayout.CENTER);
+		
+		JTextArea NotesToRestockerTextArea = new JTextArea();
+		NotesToRestockerTextArea.setWrapStyleWord(true);
+		NotesToRestockerTextArea.setLineWrap(true);
+		NotesToRestockerScrollpane.setViewportView(NotesToRestockerTextArea);
+		JButton btnSubmitNotesTo = new JButton("Submit Notes To Restocker");
+		NotesFromManagerFreeformPane.add(btnSubmitNotesTo, BorderLayout.SOUTH);
+	}
+	private class ButtonListener implements ActionListener{
+		public void actionPerformed(ActionEvent e) {
+			if(e.getSource() == btnNewMachine){
+				newMachine();
+			}
+			else if(e.getSource() == submitNewMachine){
+				//Ben has to go but when he gets back he'll add code here to make new machine work :D
+				
+			}
+			else if(e.getSource() == cancelNewMachine){
+				newMachineFrame.dispose();
+			}
+			else if(e.getSource()==MachineSelectorFreeform){
+				VendingMachine curMachine = bridge.vendingMachines().get(MachineSelectorFreeform.getSelectedIndex());
+				NotesFromRestockTextArea.setText(bridge.getManagerNotesForMachine(curMachine));
+				if (NotesFromRestockTextArea.getText().equals("")){
+					NotesFromRestockTextArea.setText("No notes for this machine at this time");
+				}
+			}			
+		}
+	}
+	
+	private void newMachine(){
+
+		newMachineFrame = new JFrame();
+
+		newMachineFrame.setTitle("New Machine");
+		newMachineFrame.setBounds(400, 200, 1500, 600);
+		JPanel p = new JPanel();
+		p.setLayout(new GridLayout(6,2));
+
+		JLabel name,rows,slots,cols,location;
+		name = new JLabel("Name: ");
+		rows = new JLabel("Rows: ");
+		slots = new JLabel("Slots: ");
+		cols = new JLabel("Columns: ");
+		location = new JLabel("Location: ");
+		String [] Depths = {"1","2","3","4","5","6","7","8","9"};
+		String [] Rows = {"3","4","5","6","7","8","9"};
+		String [] Cols = {"3","4","5","6","7","8","9"};
+		JComboBox rowBox,colBox,deBox;
+		rowBox=new JComboBox(Rows);
+		colBox=new JComboBox(Cols);
+		deBox=new JComboBox(Depths);
+		JTextField nameBox = new JTextField();
+		JTextField  locBox= new JTextField();
+		p.add(name);
+		p.add(nameBox);
+		p.add(rows);
+		p.add(rowBox);
+		p.add(cols);
+		p.add(colBox);
+		p.add(slots);
+		p.add(deBox);
+		p.add(location);
+		p.add(locBox);
+		submitNewMachine = new JButton("Submit");
+		submitNewMachine.addActionListener(listener);
+
+		cancelNewMachine = new JButton("Cancel");
+		cancelNewMachine.addActionListener(listener);
+		p.add(cancelNewMachine);
+
+		p.add(submitNewMachine);
+		newMachineFrame.getContentPane().add(p);
+
+		newMachineFrame.pack();
+
+		newMachineFrame.setVisible(true);
+	}
+	
+	private void viewAllRequests(){
+		viewAllRequestsFrame = new JFrame("Sent Requests");
+		viewAllRequestsFrame.setBounds(400, 200, 1500, 600);
+		// Ian will code this with his fancy request objects
+		
+		viewAllRequestsFrame.setVisible(true);
+	}
+	
+	private static void addPopup(Component component, final JPopupMenu popup) {
+		component.addMouseListener(new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					showMenu(e);
+				}
+			}
+			public void mouseReleased(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					showMenu(e);
+				}
+			}
+			private void showMenu(MouseEvent e) {
+				popup.show(e.getComponent(), e.getX(), e.getY());
+			}
+		});
+	}
+}

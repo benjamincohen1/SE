@@ -1,0 +1,65 @@
+/**
+    @author Jack Lawrence
+*/
+import java.io.*;
+import java.util.*;
+
+/** */
+public class RestockerActionBridge {
+
+	private VendingMachine _currentVendingMachine;
+	
+    public RestockerActionBridge() {
+			
+    }
+    
+    /**
+     * Parses request objects from the Requests.txt file
+     * @return	Arraylist of requests. If empty, that means there are no requests
+     * @throws IOException 
+     */
+    public ArrayList<Request> parseRequestsFromFile() throws IOException{
+    	ArrayList<Request> requests = new ArrayList<Request>();
+    	try{
+    		File requestsFile = new File("Requests.txt");
+    		FileReader w = new FileReader(requestsFile);
+			BufferedReader br = new BufferedReader(w);
+			String line;
+			while((line = br.readLine()) != null){
+				String [] ls = line.split(" ");
+				Request request = new Request(ls[0], Integer.parseInt(ls[6]), Integer.parseInt(ls[8]), ls[3], Integer.parseInt(ls[2]), ls[1]);
+				requests.add(request);
+			}
+			w.close();
+    	}catch(FileNotFoundException fnf){
+			throw new FileNotFoundException("File not found");
+		}catch(IOException ex){
+			throw new IOException("Parsing error; could not read request data from file");
+		}
+
+    	return requests;
+    }
+    
+    /**
+     * Confirm a restock by writing what was done to the Requests.txt file
+     * so the information can be relayed back to the manager
+     * @param requests		ArrayList of requests that were processed/are being processed
+     */
+    public void confirmRestock(ArrayList<Request> requests){
+    	File requestFile = new File("Requests.txt");
+    	BufferedWriter bw;
+		try {
+			bw = new BufferedWriter(new FileWriter(requestFile));
+			for (Request request : requests){
+				bw.write(request.toFileString());
+				bw.newLine();	
+			}
+			bw.flush();
+	        bw.close();
+	    	System.out.println("A restocker has sent a restock response to manager.");
+		} catch (IOException e) {
+			System.err.println("Error: cannot submit restock response.");
+		}
+    }
+	
+}

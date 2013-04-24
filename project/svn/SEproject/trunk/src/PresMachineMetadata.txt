@@ -1,1 +1,1 @@
-PresMachine 6 9 10 PresMachineData.txt
+presmachine 8 8 8 presmachineData.txt

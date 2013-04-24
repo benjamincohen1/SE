@@ -1,0 +1,486 @@
+/**
+    @author Jack Lawrence
+*/
+
+import java.util.*;
+import java.io.*;
+/** Exposes manager-facing actions that interface with the object model. */
+public class ManagerActionBridge {
+
+    /** All of the vending machines in the system. */
+    private ArrayList<VendingMachine> _vendingMachines;
+    /** The currently selected vending machine. */
+    private VendingMachine _currentVendingMachine;
+    public ArrayList<VendingMachine> vendingMachines() {
+        if (_vendingMachines == null) {
+            _vendingMachines = new ArrayList<VendingMachine>();
+            //Get machines from directory
+            String path = ".";
+            File folder = new File(path);
+            File[] listOfFiles=folder.listFiles();
+            ArrayList<File> MetadataFiles= new ArrayList<File>();
+            for (int i = 0;i<listOfFiles.length;i++){
+                if(listOfFiles[i].isFile()){
+                    if(listOfFiles[i].getName().matches(".*Meta.*txt")){
+                        MetadataFiles.add(listOfFiles[i]);
+                    }
+                }
+            }
+            for (File x : MetadataFiles){
+                try {
+                    VendingMachine vm = new VendingMachine(x);
+                    _vendingMachines.add(vm);
+                }
+                catch (Exception ex) {
+                    System.err.println("Couldn't create vending machine: " + ex.getMessage());
+                }
+            }
+        }
+        return _vendingMachines;
+    }
+    
+    public VendingMachine currentVendingMachine() {
+        return _currentVendingMachine;
+    }
+    
+    public void setCurrentVendingMachine(VendingMachine currentVendingMachine) {
+        _currentVendingMachine = currentVendingMachine;
+    }
+    public String getManagerNotesForMachine(VendingMachine machine){
+        String fileName = machine.name()+"ManagerNotes.txt";
+        String text="";
+
+        try{
+            FileReader r = new FileReader(fileName);
+            BufferedReader br = new BufferedReader(r);
+            String line;
+            while((line = br.readLine()) != null){
+               text+=line;
+            }
+            r.close();
+        }
+        catch(Exception ex){
+            System.out.println("Can't find file"+fileName);
+            //Change this to something non-testing
+        }
+        return text;
+    }
+    
+    /** @name Constructors */
+
+    public ManagerActionBridge() {
+    	
+    	//Initialize items file if it is not already there
+    	File itemsFile = new File("Items.txt");
+    	if (!itemsFile.exists()){
+    		try {
+				itemsFile.createNewFile();
+			} catch (IOException e) {
+				System.err.println("Couldn't create file Items.txt");
+			}
+    	}
+    	
+    	//Initialize recalled items file if it is not already there.
+    	File recalledItemsFile = new File("RecalledItems.txt");
+    	if (!recalledItemsFile.exists()){
+    		try {
+				recalledItemsFile.createNewFile();
+			} catch (IOException e) {
+				System.err.println("Couldn't create file RecalledItems.txt");
+			}
+    	}
+    }
+    
+    /** @name Actions */
+    
+    ////////////////////////////////////////////
+    /////// Vending Machine Management /////////
+    ////////////////////////////////////////////
+    
+    /** 
+        Invalidates the array of vending machines, causing them to be reloaded
+        upon next access.
+    */
+    public void reloadVendingMachinesFromDisk() {
+        _vendingMachines = null;
+    }
+    
+    /**
+        Selects the vending machine to view data on and restock.
+    */
+    public boolean selectVendingMachine(int machineIdx){
+        if (machineIdx < vendingMachines().size()) {
+            setCurrentVendingMachine(vendingMachines().get(machineIdx));
+            return true;
+        }
+        else {
+            System.err.println("Machine number out of bounds.");
+            return false;
+        }
+    }
+    
+    /**
+        Add a vending machine to the system.
+        
+        @param machine The VendingMachine object to add to the system.
+    */
+    public void addVendingMachine(VendingMachine machine) {
+        vendingMachines().add(machine);
+    }
+    
+    /**
+        Remove a vending machine from the system.
+        
+        @param machineIdx The index of the vending machine to remove.
+    */
+    public void removeVendingMachine(int machineIdx) {
+        vendingMachines().remove(machineIdx);
+    }
+    
+    public ArrayList<File> getAllRequestFiles(){
+    	ArrayList<File> requestFiles = new ArrayList<File>();
+    	String path = ".";
+    	File folder = new File(path);
+    	File[] listOfFiles = folder.listFiles();
+    	for (File file : listOfFiles){
+    		if (file.isFile()){
+    			if(file.getName().matches(".*Requests.*txt")){
+    				requestFiles.add(file);
+    			}
+    		}
+    	}
+    	return requestFiles;
+    }
+    
+    /**
+     * Read the request files and return an array list of all requests
+     * @throws IOException 
+     */
+    public ArrayList<Request> getAllRequests() throws IOException{  
+    	
+    	ArrayList<Request> requests = new ArrayList<Request>();
+		for (File file : getAllRequestFiles()){	
+			try{
+				FileReader r = new FileReader(file);
+				BufferedReader br = new BufferedReader(r);
+				String line;
+				while((line = br.readLine()) != null){
+					String [] ls = line.split(" ");
+					Request request = new Request(ls[0], Integer.parseInt(ls[6]), Integer.parseInt(ls[8]), ls[3], Integer.parseInt(ls[2]), ls[1], Integer.parseInt(ls[10]));
+					requests.add(request);
+				}
+				r.close();
+			}
+			catch(FileNotFoundException fnf){
+				throw new FileNotFoundException("File not found");
+			}
+	    	catch(IOException ex){
+				throw new IOException("Parsing error; could not read request data from file");
+			}
+		}
+
+    	return requests;
+    }
+    
+    ////////////////////////////////////////////
+    //////////////// Restocking ////////////////
+    ////////////////////////////////////////////
+    
+    
+     /**
+        Begins a batch of restocking commands for the
+        currently selected vending machine.
+    */
+    public void beginRestock() {
+        try{
+
+            File f = new File(currentVendingMachine().name()+"ManagerNotes.txt");
+            FileWriter w = new FileWriter(f);
+            BufferedWriter bw = new BufferedWriter(w);
+            bw.newLine();
+            bw.flush();
+            bw.close();
+        }
+        catch (IOException ex){
+            System.err.println("Begin restocking failed: "+ex.getMessage());
+        }
+    }
+        
+    /**
+        Walks through restocking an item in the current
+        vending machine.
+    */
+    public void restockItem() {
+        System.err.println("NOT IMPLEMENTED");
+    }
+    
+    /**
+        Walks through removing an item in the current
+        vending machine.
+    */
+    public void removeItemFromMachine() {
+        System.err.println("NOT IMPLEMENTED");
+    }
+    
+    /**
+        Cancels the current batch of restocking commands
+        for the currently selected vending machine.
+    */
+    public void cancelRestock() {
+        System.err.println("NOT IMPLEMENTED");
+    }
+
+    /**
+     * Updates the manager requests. Handles clearing of files in which all requests have been discarded.
+     * @param managerRequests
+     */
+    public void updateRequests(ArrayList<Request> managerRequests){
+    	submitRequest(managerRequests);
+    	try {
+			PrintWriter pw = null;
+			// For request files that were not on the request list, clear them to be sure
+			// that any completed requests are removed
+			boolean clearNeeded = true;
+			for (File requestFile : getAllRequestFiles()){
+				String filename = requestFile.getName();
+				String machineName = filename.substring(0, filename.length()-12);
+				clearNeeded = true;
+				for (Request request : managerRequests){
+					if (request.getMachineName().equals(machineName)){
+						clearNeeded = false;
+					}
+				}
+				if (clearNeeded){
+					pw = new PrintWriter(requestFile);
+					pw.print("");
+					pw.close();
+				}
+			}
+	        pw.close();
+	    	System.out.println("Manager requests have been discarded.");
+		} 
+		catch (IOException e) {
+			System.err.println("Error: cannot submit request");
+		} 
+		catch (NullPointerException e){
+			System.err.println("Error: no requests were passed no and request files exist");
+		}
+    }
+    
+    /**
+     * Append a request to the requests file for the restocker
+     * 
+     * @param managerRequest	The request to be added
+     */
+    public void submitRequest(ArrayList<Request> managerRequests){
+		try {
+			PrintWriter pw = null;
+			// Write all requests to files.
+			for (Request managerRequest : managerRequests){
+				File requestFile = new File(managerRequest.getMachineName() + "Requests.txt");
+				pw = new PrintWriter(new BufferedWriter(new FileWriter(requestFile, true)));
+				pw.println(managerRequest.toFileString());		
+			}
+	        pw.close();
+	    	System.out.println("A manager request as been added to file.");
+		} 
+		catch (IOException e) {
+			System.err.println("Error: cannot submit request");
+		} 
+		catch (NullPointerException e){
+			System.err.println("Error: no requests were passed no and request files exist");
+		}
+    }
+    
+    ////////////////////////////////////////////
+    ///////////// Item Management //////////////
+    ////////////////////////////////////////////
+    
+    /**
+        Adds an item type to the list of unique items, stored in Items.txt
+    */
+    public void addItem(String itemName, int itemPrice) {
+        File itemFile = new File("Items.txt");
+        PrintWriter w;
+		try {
+			w = new PrintWriter(new BufferedWriter(new FileWriter(itemFile, true)));
+	        w.println(itemName + " " + Integer.toString(itemPrice));
+	        w.close();
+		} catch (IOException e) {
+			System.err.println("Error: cannot add item.");
+		} 
+    }
+    
+    /**
+	    Remove an item at the specified index from the
+	    list of unique items.
+	    
+	    @param itemIdx The index of the item to remove.
+	*/
+	public void removeItem(String itemName) {
+		System.err.println("Unimplemented command");
+	}
+    
+    /**
+        Recall item name across all vending machines. This updates the recalledItems.txt file.
+    */
+    public void recallItem(String itemName) {
+    	try{
+	    	File itemsFile = new File("Items.txt");
+	    	FileReader r = new FileReader(itemsFile);
+			BufferedReader br = new BufferedReader(r);
+			boolean foundItem = false;
+			String line;
+			String [] lineSplit;
+			
+			while((line = br.readLine()) != null){
+				lineSplit = line.split(" ");
+				if (lineSplit[0].equalsIgnoreCase(itemName))
+					foundItem = true;
+			}	
+			br.close();
+			if (foundItem){
+		    	File recalledItemsFile = new File("RecalledItems.txt");
+		    	PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(recalledItemsFile, true)));
+		    	pw.println(itemName);
+		        pw.close();
+	        	System.out.println(itemName + " has been recalled across all vending machines.");
+			}
+			else{
+				System.err.println("Item name not found. Refer to Items.txt for list of items");
+			}
+    	}catch (FileNotFoundException f){
+    		System.err.println("File Items.txt not found, cannot recall item.");
+    	}
+    	catch (IOException e){
+    		System.err.println("Error: cannot recall item.");
+    	}
+    }
+    
+    /**
+        Returns all unique items.
+        // TODO make this return a list of ItemMetadata objects. Properly mark ItemMetadata objects that are recalled.
+    */
+    public ArrayList<ItemMetadata> getAllItems() {
+    	try{
+	    	File itemFile = new File("Items.txt");
+	    	File recalledItemsFile = new File("RecalledItems.txt");
+	    	FileReader r = new FileReader(itemFile);
+	    	BufferedReader br = new BufferedReader(r);
+	    	String line;
+	    	int i = 1;
+	    	while((line = br.readLine()) != null){
+	    		String [] lineSplit = line.split(" ");
+	    		int price = Integer.parseInt(lineSplit[lineSplit.length-1]);
+	    		System.out.println(i + ". " + lineSplit[0] + " $" + price/100.0);
+				i++;
+			}	
+	    	r = new FileReader(recalledItemsFile);
+	    	br = new BufferedReader(r);
+	    	i = 1;
+	    	System.out.println("\nRecalled Items: ");
+	    	while((line = br.readLine()) != null){
+	    		System.out.println(i + ". " + line);
+				i++;
+			}	
+	    	
+    	}catch(FileNotFoundException f){
+    		System.err.println("File Items.txt not found, cannot list Items.");
+    	}catch (IOException e){
+    		System.err.println("Cannot list items.");
+    	}
+    	
+    	return null;
+    }
+    
+    /**
+        Returns all recalled items.
+        // TODO make this return a list of recalled ItemMetadata objects.
+    */
+    public ArrayList<ItemMetadata> getRecalledItems() {
+    try{
+    	File itemFile = new File("Items.txt");
+    	File recalledItemsFile = new File("RecalledItems.txt");
+    	FileReader r = new FileReader(itemFile);
+    	BufferedReader br = new BufferedReader(r);
+    	String line;
+    	int i = 1;
+    	while((line = br.readLine()) != null){
+    		String [] lineSplit = line.split(" ");
+    		int price = Integer.parseInt(lineSplit[lineSplit.length-1]);
+    		System.out.println(i + ". " + lineSplit[0] + " $" + price/100.0);
+			i++;
+		}	
+    	r = new FileReader(recalledItemsFile);
+    	br = new BufferedReader(r);
+    	i = 1;
+    	System.out.println("\nRecalled Items: ");
+    	while((line = br.readLine()) != null){
+    		System.out.println(i + ". " + line);
+			i++;
+		}	
+	    br.close();	
+    	}catch(FileNotFoundException f){
+    		System.err.println("File Items.txt not found, cannot list Items.");
+    	}catch (IOException e){
+    		System.err.println("Cannot list items.");
+    	}
+    	
+    	return null;
+    }
+    
+    /**
+        Return all sales across vending machines.
+    */
+    public ArrayList<Sale> getSales() {
+        VendingMachine backup = _currentVendingMachine;
+        String path = ".";
+        File folder = new File(path);
+        File[] listOfFiles=folder.listFiles();
+        for (int i = 0;i<listOfFiles.length;i++){
+            if(listOfFiles[i].isFile()){
+                if(listOfFiles[i].getName().matches(".*Meta.*txt")){
+                    try {
+                        _currentVendingMachine = new VendingMachine(listOfFiles[i]);
+                        System.out.println(_currentVendingMachine.name());
+                        System.out.println("------------------------------");
+/*                         listSalesForCurrentMachine(); */
+                    }
+                    catch (Exception ex) {
+                        System.err.println("Couldn't list sales: " + ex.getMessage());
+                    }
+                }
+            }
+        }    
+        _currentVendingMachine=backup;
+        
+        return null;
+    }
+    
+    /**
+        Return sales for the current vending machine.
+    */
+    public ArrayList<Sale> getSalesForCurrentMachine() {
+
+        String newName = new String(_currentVendingMachine.name()+"_log.txt");
+        try{
+            Reader r = new FileReader(new File(newName));
+            BufferedReader br = new BufferedReader(r);
+            String line;
+            while((line = br.readLine()) != null){
+                if(line.matches(".*:.*")){
+                    System.out.println(line);
+                }
+                else{
+                    System.out.println("\t"+line);
+                }
+            }
+
+        }
+        catch(IOException ex){
+            System.err.println("Log file not found: " + ex.getMessage());
+        }
+        
+        return null;
+    }
+}

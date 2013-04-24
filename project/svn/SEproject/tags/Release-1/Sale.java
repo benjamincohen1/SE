@@ -1,0 +1,40 @@
+/**
+    @author Jack Lawrence
+*/
+import java.util.*;
+
+/** Sale represents a specific transaction. */
+public class Sale {
+    
+    /** @name Instance Variables */
+
+    /** The sale date */
+    private Date _date;
+    /** The line items for the sale. */
+    private ArrayList<LineItem> _lineItems;
+    
+    /** @name Accessors & Mutators */
+    
+    public Date date() {
+        return _date;
+    }
+    
+    public ArrayList<LineItem> lineItems() {
+        return _lineItems;
+    }
+    
+    /** @name Constructors */
+    
+    public Sale(Date date, ArrayList<LineItem> lineItems) {
+        _date = date;
+        _lineItems = lineItems;
+    }
+    public String getLogStringRepresentation(){
+        String ret = new String();
+        ret+=_date.toString()+"\n";
+        for (LineItem l : _lineItems){
+            ret+=l.getString()+"\n";
+        }
+        return ret;
+    }	
+}

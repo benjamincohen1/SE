@@ -1,0 +1,146 @@
+/**
+    @author Jack Lawrence
+*/
+import java.io.*;
+import java.util.*;
+/** Exposes customer-facing actions that interface with the object model. */
+public class CustomerActionBridge {
+
+    /** @name Instance Variables */
+    
+    /** The vending machine */
+    private static VendingMachine _vendingMachine;
+    /** 
+        The transaction list. Keys are CoordinatePair objects and values are Integer objects. 
+        The CoordinatePair corresponds to the coordinates of the Slot and the Integer
+        corresponds to the quantity of items to be dispensed from the Slot.
+        
+        Using a LinkedHashMap makes it easy to combine multiple requests for
+        the same item into one datapoint. LinkedHashMap objects preserve insertion order. 
+    */
+    private static LinkedHashMap<CoordinatePair, Integer> _currTransaction;
+    
+    /** @name Accessors & Mutators */
+    
+    public VendingMachine vendingMachine() {
+        return _vendingMachine;
+    }
+    
+    /** @name Constructors */
+    
+    /**
+        Creates a CustomerActionBridge with a specific vending machine name.
+        
+        @param vendingMachineName The name of the vending machine to load in.
+    */
+    public CustomerActionBridge(String vendingMachineName) throws IOException, FileNotFoundException {
+        //Populate vending machine from file
+        VendingMachine vendingMachine = new VendingMachine(new File(vendingMachineName+"Metadata.txt"));
+        
+        _vendingMachine = vendingMachine;
+    }
+    
+    /** @name Actions */
+    
+     /**
+        Begin a transaction.
+    */
+    private void beginTransaction() {
+        _currTransaction = new LinkedHashMap<CoordinatePair, Integer>();
+    }
+    
+    /**
+        Cancel a transaction. Begins a new transaction afterwards.
+    */
+    public void cancelTransaction() {
+        beginTransaction();
+    }
+    
+    /**
+        Finish paying for a transaction.
+        
+        Creates an array of LineItem objects using the data in _currTransaction
+        and then adds the LineItem objects to a new Sale object with the current 
+        date. Archives the sale to disk.
+        
+        Clears the transaction after it's finished and begins a new one.
+    */
+    public void finishPayment(String name, VendingMachine vendingMachine) throws IOException {
+        try {
+            if (_currTransaction != null) {
+                File f = new File(name+"_log.txt");
+                PrintWriter w=new PrintWriter(new BufferedWriter(new FileWriter(f, true))); 
+                ArrayList<LineItem> lineItems = new ArrayList<LineItem>();
+                for (Map.Entry<CoordinatePair, Integer> entry : _currTransaction.entrySet()) {
+                    CoordinatePair pair = entry.getKey();
+                    Integer quantity = entry.getValue();
+                    if (quantity > 0) {
+                        vendingMachine().dispenseItem(pair.row, pair.column, quantity);
+                        Slot slot = vendingMachine().slotAtCoordinates(pair.row, pair.column);
+                        LineItem lineItem = new LineItem(slot.metadata(), quantity);
+                        lineItems.add(lineItem);
+                    }
+                }
+                Date currentDate = new Date();
+                Sale sale = new Sale(currentDate, lineItems);
+                w.println(sale.getLogStringRepresentation());
+                w.close();
+                _currTransaction = null;
+            }
+        }
+        catch(IOException ex){
+            throw new IOException("Blah Blah Blah");
+        }
+        vendingMachine.updateFlatfile();
+
+        beginTransaction();
+    }
+    
+    /**
+        Add an item to the user's cart (the current transaction).
+        
+        @param number The number of the slot in the vending machine.
+        @param quantity The quantity of the item to add to the user's cart.
+        
+        @throw IllegalArgumentException if the number for the slot is out of 
+        bounds or the quantity is unavailable.
+    */
+    public void addItemToCart(int number, int quantity) throws IllegalArgumentException {
+        if (_currTransaction == null) {
+            beginTransaction();
+        }
+        if (number > _vendingMachine.height()*10 + 10 + _vendingMachine.width() + 1) {
+             // out of bounds
+             throw new IllegalArgumentException(String.format("Item slot %d is out of bounds.", number));
+        }
+        int row = number / 10 - 1;
+        int column = number%10 - 1;
+        CoordinatePair pair = new CoordinatePair(row, column);
+        Integer oldQuantity = _currTransaction.get(pair); // Get existing quantity from the transaction, if any.
+        oldQuantity = ((oldQuantity != null)?oldQuantity:0); // Assign to 0 instead of null if empty.
+        if (vendingMachine().canDispenseItem(pair.row, pair.column, quantity+oldQuantity)) {
+            Integer finalQuantity = quantity + oldQuantity;
+            _currTransaction.put(pair, finalQuantity);
+        }
+        else {
+            throw new IllegalArgumentException(String.format("Slot at %d does not have %d unexpired item%s to vend.", number, quantity, (quantity != 1)?"s":""));
+        }
+        
+        System.out.println(_currTransaction);
+    }
+
+    /**
+        Remove an item from the user's cart (the current transaction) and put it back in the machine.
+        
+        @param number The number of the slot in the vending machine.
+        
+        @throw IllegalArgumentException if the pair does not exist in the cart.
+    */
+    public void removeItemFromCart(int number) throws IllegalArgumentException {
+        int row = number / 10 - 1;
+        int column = number%10 - 1;
+        CoordinatePair pair = new CoordinatePair(row, column);
+        _currTransaction.put(pair, 0);
+    }
+	
+}

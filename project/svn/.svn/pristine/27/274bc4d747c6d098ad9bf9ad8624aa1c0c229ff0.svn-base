@@ -1,0 +1,175 @@
+import java.awt.EventQueue;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+/**
+ * 
+ * @author Ian Frasch (ijf1860@rit.edu)
+ */
+public class CustomerGUI {
+
+	private JFrame frame;
+	private int total = 3000;	//test value, replace with something real
+	private String itemNumberEntered = "24";	//just for test layout. In reality, the number should be
+												//the number the user is entering (so they can see it)
+	private String[] testCart = {"Taco: $10.00", "Taco: $10.00", "Taco: $10.00"}; //more test stuff
+
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					CustomerGUI window = new CustomerGUI();
+					window.frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	/**
+	 * Create the application.
+	 */
+	public CustomerGUI() {
+		initialize();
+	}
+
+	/**
+	 * Initialize the contents of the frame.
+	 */
+	private void initialize() {
+		frame = new JFrame();
+		frame.setBounds(100, 100, 450, 300);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		JPanel panel_1 = new JPanel();
+		frame.getContentPane().add(panel_1, BorderLayout.CENTER);
+		panel_1.setLayout(new GridLayout(1, 2, 0, 0));
+		
+		JPanel panel_3 = new JPanel();
+		panel_1.add(panel_3);
+		panel_3.setLayout(new BorderLayout(0, 0));
+		
+		JPanel panel_4 = new JPanel();
+		panel_3.add(panel_4, BorderLayout.CENTER);
+		panel_4.setLayout(new GridLayout(0, 3, 0, 0));
+		
+		JButton button_6 = new JButton("7");
+		panel_4.add(button_6);
+		
+		JButton button_7 = new JButton("8");
+		panel_4.add(button_7);
+		
+		JButton button_8 = new JButton("9");
+		panel_4.add(button_8);
+		
+		JButton button_3 = new JButton("4");
+		panel_4.add(button_3);
+		
+		JButton button_4 = new JButton("5");
+		panel_4.add(button_4);
+		
+		JButton button_5 = new JButton("6");
+		panel_4.add(button_5);
+		
+		JButton button = new JButton("1");
+		panel_4.add(button);
+		
+		JButton button_1 = new JButton("2");
+		panel_4.add(button_1);
+		
+		JButton button_2 = new JButton("3");
+		panel_4.add(button_2);
+		
+		JPanel panel_10 = new JPanel();
+		panel_3.add(panel_10, BorderLayout.SOUTH);
+		panel_10.setLayout(new BorderLayout(0, 0));
+		
+		JButton btnEnter = new JButton("ENTER");
+		panel_10.add(btnEnter, BorderLayout.CENTER);
+		
+		JPanel panel_11 = new JPanel();
+		panel_11.setBackground(Color.WHITE);
+		panel_10.add(panel_11, BorderLayout.WEST);
+		panel_11.setLayout(new BorderLayout(0, 0));
+		
+		JTextPane textPane = new JTextPane();
+		textPane.setEditable(false);
+		textPane.setText(itemNumberEntered);
+		panel_11.add(textPane);
+		
+		Component horizontalStrut = Box.createHorizontalStrut(25);
+		panel_11.add(horizontalStrut, BorderLayout.EAST);
+		
+		Component horizontalStrut_1 = Box.createHorizontalStrut(25);
+		panel_11.add(horizontalStrut_1, BorderLayout.WEST);
+		
+		JPanel panel = new JPanel();
+		panel_1.add(panel);
+		panel.setLayout(new BorderLayout(0, 0));
+		
+		JPanel panel_5 = new JPanel();
+		panel.add(panel_5, BorderLayout.NORTH);
+		
+		JLabel lblCart = new JLabel("Cart:");
+		panel_5.add(lblCart);
+		
+		JPanel panel_6 = new JPanel();
+		panel.add(panel_6, BorderLayout.SOUTH);
+		panel_6.setLayout(new GridLayout(2, 1, 0, 0));
+		
+		JButton btnCancel = new JButton("Cancel");
+		panel_6.add(btnCancel);
+		
+		JButton btnPay = new JButton("Pay");
+		panel_6.add(btnPay);
+		
+		JPanel panel_8 = new JPanel();
+		panel.add(panel_8, BorderLayout.WEST);
+		
+		JPanel panel_9 = new JPanel();
+		FlowLayout flowLayout = (FlowLayout) panel_9.getLayout();
+		flowLayout.setVgap(0);
+		panel.add(panel_9, BorderLayout.EAST);
+		
+		JButton btnX = new JButton("X");
+		panel_9.add(btnX);
+		
+		JPanel panel_7 = new JPanel();
+		panel.add(panel_7, BorderLayout.CENTER);
+		panel_7.setLayout(new BorderLayout(0, 0));
+		
+		JScrollPane scrollPane = new JScrollPane();
+		panel_7.add(scrollPane);
+		
+		JList list = new JList();
+		list.setListData(testCart);
+		scrollPane.setViewportView(list);
+		
+		JPanel panel_12 = new JPanel();
+		panel_12.setBackground(Color.WHITE);
+		panel_7.add(panel_12, BorderLayout.SOUTH);
+		panel_12.setLayout(new BorderLayout(0, 0));
+		
+		JLabel lblTotal = new JLabel("Total:");
+		lblTotal.setBackground(Color.WHITE);
+		panel_12.add(lblTotal, BorderLayout.WEST);
+		
+		JTextPane textPaneTotal = new JTextPane();
+		textPaneTotal.setEditable(false);
+		textPaneTotal.setText("$"+ total/100.0);
+		panel_12.add(textPaneTotal, BorderLayout.CENTER);
+		
+		JPanel panel_2 = new JPanel();
+		frame.getContentPane().add(panel_2, BorderLayout.NORTH);
+		
+		JLabel lblChalupaMachine = new JLabel("CHALUPA MACHINE");
+		panel_2.add(lblChalupaMachine);
+	}
+
+}
